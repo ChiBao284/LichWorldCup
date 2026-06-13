@@ -41,7 +41,7 @@ export default function MatchDetailClient({ match: initial }: { match: Match }) 
 
   return (
     <div className="mx-auto max-w-4xl space-y-6 px-4 py-10">
-      <Link href="/schedule" className="text-sm text-slate-400 hover:text-neon">
+      <Link href="/schedule" className="text-sm text-muted2 hover:text-accent">
         ← Lịch thi đấu
       </Link>
 
@@ -58,7 +58,7 @@ export default function MatchDetailClient({ match: initial }: { match: Match }) 
         )}
         <div className="relative">
           <div className="mb-6 flex flex-col items-center gap-2">
-            <span className="text-xs font-bold uppercase tracking-widest text-slate-400">
+            <span className="text-xs font-bold uppercase tracking-widest text-muted2">
               {STAGE_LABELS[match.stage]}
               {match.group_name ? ` · Bảng ${match.group_name}` : ""}
             </span>
@@ -85,7 +85,7 @@ export default function MatchDetailClient({ match: initial }: { match: Match }) 
                   {match.home_score}-{match.away_score}
                 </motion.div>
               ) : (
-                <div className="text-3xl font-black text-slate-300 sm:text-5xl">VS</div>
+                <div className="text-3xl font-black text-muted sm:text-5xl">VS</div>
               )}
             </div>
             <TeamBlock
@@ -95,7 +95,7 @@ export default function MatchDetailClient({ match: initial }: { match: Match }) 
             />
           </div>
 
-          <div className="mt-7 space-y-1 text-center text-sm text-slate-400">
+          <div className="mt-7 space-y-1 text-center text-sm text-muted2">
             <p className="capitalize">🗓 {formatFullDate(match.kickoff_at)} (giờ VN)</p>
             {match.venue && <p>📍 {match.venue}</p>}
           </div>

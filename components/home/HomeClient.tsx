@@ -157,7 +157,7 @@ export default function HomeClient({ matches: initial, teams, leaderboard }: Pro
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
-            className="mb-4 inline-block rounded-full border border-neon/30 bg-neon/10 px-4 py-1.5 text-sm font-semibold text-neon"
+            className="mb-4 inline-block rounded-full border border-neon/30 bg-neon/10 px-4 py-1.5 text-sm font-semibold text-accent"
           >
             🇺🇸 🇨🇦 🇲🇽 · 11.06 — 19.07.2026
           </motion.p>
@@ -169,19 +169,14 @@ export default function HomeClient({ matches: initial, teams, leaderboard }: Pro
             className="text-6xl font-black leading-none tracking-tighter sm:text-8xl lg:text-9xl"
           >
             <span className="text-gradient block">WORLD CUP</span>
-            <span
-              className="block text-transparent"
-              style={{ WebkitTextStroke: "2px rgba(232,237,247,0.85)" }}
-            >
-              2026
-            </span>
+            <span className="text-stroke block">2026</span>
           </motion.h1>
 
           <motion.p
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3 }}
-            className="mx-auto mt-6 max-w-xl text-base text-slate-300 sm:text-lg"
+            className="mx-auto mt-6 max-w-xl text-base text-muted sm:text-lg"
           >
             Lịch thi đấu · Tỉ số trực tiếp · Pick đội cùng đồng nghiệp —{" "}
             <span className="text-gradient-hot font-bold">thua thì mua nước</span> 🧋
@@ -224,7 +219,7 @@ export default function HomeClient({ matches: initial, teams, leaderboard }: Pro
                 <div className="text-2xl font-black text-gradient sm:text-4xl">
                   <Counter to={s.n} />
                 </div>
-                <div className="text-xs text-slate-400 sm:text-sm">{s.label}</div>
+                <div className="text-xs text-muted2 sm:text-sm">{s.label}</div>
               </div>
             ))}
           </motion.div>
@@ -234,14 +229,14 @@ export default function HomeClient({ matches: initial, teams, leaderboard }: Pro
         <motion.div
           animate={{ y: [0, 10, 0] }}
           transition={{ repeat: Infinity, duration: 1.8 }}
-          className="absolute bottom-6 text-2xl text-slate-500"
+          className="absolute bottom-6 text-2xl text-muted3"
         >
           ↓
         </motion.div>
       </section>
 
       {/* ================= MARQUEE CỜ 48 ĐỘI ================= */}
-      <div className="relative border-y border-white/5 bg-white/[0.02] py-4">
+      <div className="relative border-y border-hairline bg-soft py-4">
         <div className="flex w-max animate-marquee gap-10 px-5 text-4xl">
           {[...teams, ...teams].map((t, i) => (
             <Link
@@ -264,16 +259,16 @@ export default function HomeClient({ matches: initial, teams, leaderboard }: Pro
               <span className="live-dot inline-block h-3 w-3 rounded-full bg-red-500" />
               <span className="text-gradient-hot">Đang diễn ra</span>
             </h2>
-            <p className="mb-8 text-slate-400">
+            <p className="mb-8 text-muted2">
               Tỉ số cập nhật trực tiếp — pick đội của bạn trước khi hết trận!
             </p>
           </Reveal>
 
           {live.length === 0 ? (
             <Reveal>
-              <div className="glass rounded-3xl p-10 text-center text-slate-400">
+              <div className="glass rounded-3xl p-10 text-center text-muted2">
                 😴 Chưa có trận nào đang lăn bóng.{" "}
-                <Link href="/schedule" className="font-bold text-neon underline">
+                <Link href="/schedule" className="font-bold text-accent underline">
                   Xem các trận sắp tới →
                 </Link>
               </div>
@@ -320,7 +315,7 @@ export default function HomeClient({ matches: initial, teams, leaderboard }: Pro
                           </div>
                         </div>
                         {m.venue && (
-                          <p className="mt-5 text-center text-xs text-slate-400">
+                          <p className="mt-5 text-center text-xs text-muted2">
                             📍 {m.venue}
                           </p>
                         )}
@@ -342,11 +337,11 @@ export default function HomeClient({ matches: initial, teams, leaderboard }: Pro
                 <h2 className="text-3xl font-black sm:text-4xl">
                   <span className="text-gradient">Sắp diễn ra</span> ⏳
                 </h2>
-                <p className="mt-2 text-slate-400">Đặt lịch hóng kèo dần đi là vừa</p>
+                <p className="mt-2 text-muted2">Đặt lịch hóng kèo dần đi là vừa</p>
               </div>
               <Link
                 href="/schedule"
-                className="hidden text-sm font-bold text-neon hover:underline sm:block"
+                className="hidden text-sm font-bold text-accent hover:underline sm:block"
               >
                 Xem tất cả →
               </Link>
@@ -391,10 +386,10 @@ export default function HomeClient({ matches: initial, teams, leaderboard }: Pro
               <h2 className="text-3xl font-black sm:text-4xl">
                 Nhánh đấu <span className="text-gradient">loại trực tiếp</span>
               </h2>
-              <p className="mx-auto mt-3 max-w-md text-slate-400">
+              <p className="mx-auto mt-3 max-w-md text-muted2">
                 32 đội · từ vòng 1/16 đến trận Chung kết tại MetLife Stadium, New York
               </p>
-              <span className="mt-6 inline-block rounded-full border border-neon/40 px-6 py-2.5 font-bold text-neon transition group-hover:bg-neon/10">
+              <span className="mt-6 inline-block rounded-full border border-neon/40 px-6 py-2.5 font-bold text-accent transition group-hover:bg-neon/10">
                 Khám phá nhánh đấu →
               </span>
             </div>
@@ -407,14 +402,14 @@ export default function HomeClient({ matches: initial, teams, leaderboard }: Pro
             <h2 className="mb-2 text-center text-3xl font-black sm:text-4xl">
               🔮 Thánh dự đoán
             </h2>
-            <p className="mb-10 text-center text-slate-400">
+            <p className="mb-10 text-center text-muted2">
               Ai pick trúng đội thắng nhiều nhất?
             </p>
           </Reveal>
 
           {leaderboard.length === 0 ? (
             <Reveal>
-              <p className="text-center text-slate-500">
+              <p className="text-center text-muted3">
                 Chưa có ai trên bảng — pick vài trận để lên bảng vàng nào!
               </p>
             </Reveal>
@@ -428,10 +423,10 @@ export default function HomeClient({ matches: initial, teams, leaderboard }: Pro
                   return (
                     <Reveal key={row.user_id} delay={idx * 0.15} className="text-center">
                       <div
-                        className={`mx-auto flex items-center justify-center rounded-full border-2 bg-surface shadow-xl ${
+                        className={`mx-auto flex items-center justify-center rounded-full border-2 bg-card shadow-xl ${
                           isFirst
                             ? "h-24 w-24 border-gold text-5xl shadow-gold/20"
-                            : "h-18 w-18 border-white/20 text-4xl"
+                            : "h-18 w-18 border-hairline text-4xl"
                         }`}
                       >
                         {row.avatar}
@@ -441,7 +436,7 @@ export default function HomeClient({ matches: initial, teams, leaderboard }: Pro
                       <div className="text-gradient text-xl font-black">
                         {row.win_rate ?? 0}%
                       </div>
-                      <div className="text-xs text-slate-500">
+                      <div className="text-xs text-muted3">
                         {row.correct_picks}/{row.total_picks} trận
                       </div>
                     </Reveal>
@@ -453,7 +448,7 @@ export default function HomeClient({ matches: initial, teams, leaderboard }: Pro
           <Reveal className="mt-8 text-center">
             <Link
               href="/leaderboard"
-              className="inline-block font-bold text-neon hover:underline"
+              className="inline-block font-bold text-accent hover:underline"
             >
               Xem bảng xếp hạng đầy đủ →
             </Link>
@@ -475,7 +470,7 @@ export default function HomeClient({ matches: initial, teams, leaderboard }: Pro
               <h2 className="text-3xl font-black sm:text-4xl">
                 Luật chơi: <span className="text-gradient-hot">thua là mua nước</span>
               </h2>
-              <p className="mx-auto mt-4 max-w-lg text-slate-300">
+              <p className="mx-auto mt-4 max-w-lg text-muted">
                 Pick sai đội? Vào trang trận đấu nhập link quán nước, cả team sẽ
                 &quot;giúp&quot; bạn đặt món ngay lập tức 😈
               </p>

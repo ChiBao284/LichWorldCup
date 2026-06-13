@@ -96,7 +96,7 @@ export default function ScheduleClient({ matches: initial }: { matches: Match[] 
               className={`rounded-full px-4 py-2 text-sm font-bold transition ${
                 tab === t.key
                   ? "bg-gradient-to-r from-neon to-ice text-pitch"
-                  : "glass text-slate-300 hover:text-white"
+                  : "glass text-muted hover:text-fg"
               }`}
             >
               {t.label}
@@ -106,14 +106,14 @@ export default function ScheduleClient({ matches: initial }: { matches: Match[] 
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Tìm đội... (vd: Việt... à nhầm, Brazil 😅)"
-            className="glass ml-auto w-full rounded-full px-4 py-2 text-sm outline-none placeholder:text-slate-500 focus:border-neon/50 sm:w-64"
+            className="glass ml-auto w-full rounded-full px-4 py-2 text-sm outline-none placeholder:text-muted3 focus:border-neon/50 sm:w-64"
           />
         </div>
         <div className="flex flex-wrap gap-1.5">
           <button
             onClick={() => setGroup(null)}
             className={`rounded-full px-3 py-1 text-xs font-bold transition ${
-              group === null ? "bg-neon/20 text-neon" : "bg-white/5 text-slate-400 hover:text-white"
+              group === null ? "bg-neon/20 text-accent" : "bg-soft text-muted2 hover:text-fg"
             }`}
           >
             Mọi bảng
@@ -123,7 +123,7 @@ export default function ScheduleClient({ matches: initial }: { matches: Match[] 
               key={g}
               onClick={() => setGroup(group === g ? null : g)}
               className={`rounded-full px-3 py-1 text-xs font-bold transition ${
-                group === g ? "bg-neon/20 text-neon" : "bg-white/5 text-slate-400 hover:text-white"
+                group === g ? "bg-neon/20 text-accent" : "bg-soft text-muted2 hover:text-fg"
               }`}
             >
               Bảng {g}
@@ -134,7 +134,7 @@ export default function ScheduleClient({ matches: initial }: { matches: Match[] 
 
       {/* Danh sách theo ngày */}
       {byDate.length === 0 ? (
-        <div className="glass rounded-3xl p-12 text-center text-slate-400">
+        <div className="glass rounded-3xl p-12 text-center text-muted2">
           Không tìm thấy trận nào 🤷
         </div>
       ) : (

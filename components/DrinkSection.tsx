@@ -100,8 +100,6 @@ export default function DrinkSection({ match }: { match: Match }) {
     };
   }, [match.id, userId, apply]);
 
-  if (match.status !== "finished") return null;
-
   async function submitLink(e: React.FormEvent) {
     e.preventDefault();
     if (!user || !url.trim() || busy) return;
@@ -134,61 +132,88 @@ export default function DrinkSection({ match }: { match: Match }) {
     setBusy(false);
   }
 
+  const finished = match.status === "finished";
+
   return (
     <div className="glass rounded-3xl p-5 sm:p-6">
-      <h3 className="mb-1 text-lg font-extrabold">🧋 Góc đền nước</h3>
+      <div className="mb-1 flex items-center justify-between">
+        <h3 className="text-lg font-extrabold">🧋 Góc đền nước</h3>
+        {links.length > 0 && (
+          <span className="rounded-full bg-soft px-2.5 py-0.5 text-xs font-bold text-muted2">
+            {links.length} link
+          </span>
+        )}
+      </div>
 
-      {isDraw ? (
-        <p className="text-sm text-slate-400">
-          Trận này hòa — hôm nay không ai phải mua nước, giải tán 😌
+      {/* Lời dẫn theo ngữ cảnh trận đấu */}
+      {finished && !isDraw ? (
+        <p className="mb-4 text-sm text-muted2">
+          Đội thua: {loserTeam?.flag} <b>{loserTeam?.name}</b> — khao nước là
+          chuyện hiển nhiên 😎. Nhưng ai cũng có thể góp link quán nhé!
+        </p>
+      ) : finished && isDraw ? (
+        <p className="mb-4 text-sm text-muted2">
+          Trận hòa nên không ai bị bắt — nhưng khát thì cứ góp link, cả nhóm
+          uống chung 🥤
         </p>
       ) : (
-        <p className="mb-4 text-sm text-slate-400">
-          Ai lỡ pick {loserTeam?.flag} {loserTeam?.name} thì gửi link quán nước
-          vào đây, anh em order nhẹ tay thôi 😈
+        <p className="mb-4 text-sm text-muted2">
+          Góp sẵn link quán nước cho cả nhóm — ai thua kèo sẽ &quot;tự giác&quot; 😏
         </p>
       )}
 
-      {/* Form nhập link — chỉ hiện cho người pick đội thua */}
+      {/* Nhắc nhẹ người đã lỡ pick đội thua */}
       {iLost && (
+        <div className="mb-3 rounded-2xl border border-hot/30 bg-hot/5 p-3 text-sm">
+          Bạn đã pick {loserTeam?.flag} <b>{loserTeam?.name}</b> — chịu khó khao
+          nước nha 🫡
+        </div>
+      )}
+
+      {/* Form nhập link — MỌI NGƯỜI đăng nhập đều gắn được */}
+      {user ? (
         <form onSubmit={submitLink} className="mb-5 space-y-2">
-          <div className="rounded-2xl border border-hot/30 bg-hot/5 p-3 text-sm">
-            Bạn đã pick {loserTeam?.flag} <b>{loserTeam?.name}</b> — chịu khó
-            khao nước nha 🫡
-          </div>
           <input
             value={url}
             onChange={(e) => setUrl(e.target.value)}
             type="url"
             required
-            placeholder="Dán link quán (GrabFood, ShopeeFood...)"
-            className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm outline-none placeholder:text-slate-500 focus:border-neon/50"
+            placeholder="Dán link quán (GrabFood, ShopeeFood, Highlands...)"
+            className="w-full rounded-xl border border-hairline bg-soft px-4 py-2.5 text-sm outline-none placeholder:text-muted3 focus:border-neon/50"
           />
           <div className="flex gap-2">
             <input
               value={note}
               onChange={(e) => setNote(e.target.value)}
-              placeholder="Ghi chú (vd: chỉ được chọn món < 40k 🥲)"
-              className="flex-1 rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm outline-none placeholder:text-slate-500 focus:border-neon/50"
+              placeholder="Ghi chú (vd: chỉ chọn món < 40k 🥲)"
+              className="flex-1 rounded-xl border border-hairline bg-soft px-4 py-2.5 text-sm outline-none placeholder:text-muted3 focus:border-neon/50"
             />
             <button
               type="submit"
-              disabled={busy}
-              className="rounded-xl bg-gradient-to-r from-hot to-gold px-5 py-2.5 text-sm font-bold text-pitch transition hover:opacity-90 disabled:opacity-50"
+              disabled={busy || !url.trim()}
+              className="shrink-0 rounded-xl bg-gradient-to-r from-hot to-gold px-5 py-2.5 text-sm font-bold text-pitch transition hover:opacity-90 disabled:opacity-50"
             >
-              Gửi link 🧋
+              {busy ? "Đang lưu..." : "Gắn link 🧋"}
             </button>
           </div>
+          <p className="text-xs text-muted3">
+            Lưu xong là mọi người thấy ngay và vào đặt nước được 👇
+          </p>
         </form>
+      ) : (
+        <button
+          onClick={signInWithGoogle}
+          className="mb-5 w-full rounded-xl border border-hairline bg-soft py-2.5 text-sm font-bold text-accent transition hover:border-accent/40"
+        >
+          Đăng nhập Google để gắn link nước 🧋
+        </button>
       )}
 
       {/* Danh sách link nước + đặt món */}
       {links.length === 0 ? (
-        !isDraw && (
-          <p className="text-sm text-slate-500">
-            Chưa có link nào... mấy bạn thua kèo đang trốn đâu rồi? 👀
-          </p>
-        )
+        <p className="text-sm text-muted3">
+          Chưa có link nào — bạn gắn link đầu tiên đi, cả nhóm chờ đặt nước 👀
+        </p>
       ) : (
         <ul className="space-y-4">
           <AnimatePresence>
@@ -199,19 +224,19 @@ export default function DrinkSection({ match }: { match: Match }) {
                   key={link.id}
                   initial={{ opacity: 0, y: 12 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="rounded-2xl border border-white/10 bg-white/[0.03] p-4"
+                  className="rounded-2xl border border-hairline bg-soft p-4"
                 >
                   <div className="flex items-center gap-2.5">
-                    <span className="flex h-9 w-9 items-center justify-center rounded-full bg-surface text-lg">
+                    <span className="flex h-9 w-9 items-center justify-center rounded-full bg-card text-lg">
                       {link.profiles?.avatar ?? "🙂"}
                     </span>
                     <div className="min-w-0 flex-1">
                       <p className="truncate text-sm">
                         <b>{link.profiles?.username ?? "Ẩn danh"}</b>{" "}
-                        <span className="text-slate-400">khao nước 🫶</span>
+                        <span className="text-muted2">khao nước 🫶</span>
                       </p>
                       {link.note && (
-                        <p className="truncate text-xs text-slate-400">{link.note}</p>
+                        <p className="truncate text-xs text-muted2">{link.note}</p>
                       )}
                     </div>
                     <a
@@ -225,12 +250,12 @@ export default function DrinkSection({ match }: { match: Match }) {
                   </div>
 
                   {linkOrders.length > 0 && (
-                    <ul className="mt-3 space-y-1.5 border-t border-white/5 pt-3">
+                    <ul className="mt-3 space-y-1.5 border-t border-hairline pt-3">
                       {linkOrders.map((o) => (
                         <li key={o.id} className="flex items-center gap-2 text-sm">
                           <span>{o.profiles?.avatar ?? "🙂"}</span>
                           <b className="shrink-0">{o.profiles?.username ?? "Ẩn danh"}:</b>
-                          <span className="truncate text-slate-300">{o.item}</span>
+                          <span className="truncate text-muted">{o.item}</span>
                         </li>
                       ))}
                     </ul>
@@ -244,12 +269,12 @@ export default function DrinkSection({ match }: { match: Match }) {
                       }
                       onKeyDown={(e) => e.key === "Enter" && submitOrder(link.id)}
                       placeholder="Bạn uống gì? (vd: Trà sữa 100% đường 😋)"
-                      className="flex-1 rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm outline-none placeholder:text-slate-500 focus:border-neon/50"
+                      className="flex-1 rounded-xl border border-hairline bg-soft px-3 py-2 text-sm outline-none placeholder:text-muted3 focus:border-neon/50"
                     />
                     <button
                       onClick={() => submitOrder(link.id)}
                       disabled={busy}
-                      className="rounded-xl border border-neon/40 px-4 py-2 text-sm font-bold text-neon transition hover:bg-neon/10 disabled:opacity-50"
+                      className="rounded-xl border border-neon/40 px-4 py-2 text-sm font-bold text-accent transition hover:bg-neon/10 disabled:opacity-50"
                     >
                       Đặt 🛒
                     </button>

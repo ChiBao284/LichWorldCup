@@ -71,7 +71,7 @@ export default function ProfilePage() {
         <h1 className="mb-1 text-3xl font-black">
           Hồ sơ <span className="text-gradient">của bạn</span>
         </h1>
-        <p className="mb-8 text-sm text-slate-400">
+        <p className="mb-8 text-sm text-muted2">
           Tên và avatar này sẽ hiện khi bạn pick đội & đặt nước.
         </p>
 
@@ -82,13 +82,13 @@ export default function ProfilePage() {
             initial={{ scale: 0.5, rotate: -20 }}
             animate={{ scale: 1, rotate: 0 }}
             transition={{ type: "spring", stiffness: 300, damping: 15 }}
-            className="flex h-20 w-20 items-center justify-center rounded-full border-2 border-neon/50 bg-surface text-5xl shadow-[0_0_30px_-8px_rgba(0,255,135,0.5)]"
+            className="flex h-20 w-20 items-center justify-center rounded-full border-2 border-neon/50 bg-card text-5xl shadow-[0_0_30px_-8px_rgba(0,255,135,0.5)]"
           >
             {avatar || "🙂"}
           </motion.div>
           <div>
             <p className="text-xl font-black">{username || "Tên của bạn"}</p>
-            <p className="text-xs text-slate-500">{user.email}</p>
+            <p className="text-xs text-muted3">{user.email}</p>
           </div>
         </div>
 
@@ -98,7 +98,7 @@ export default function ProfilePage() {
           onChange={(e) => setUsername(e.target.value)}
           maxLength={30}
           placeholder="vd: Trùm kèo trà sữa"
-          className="mb-6 w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 outline-none placeholder:text-slate-500 focus:border-neon/50"
+          className="mb-6 w-full rounded-xl border border-hairline bg-soft px-4 py-3 outline-none placeholder:text-muted3 focus:border-neon/50"
         />
 
         <label className="mb-2 block text-sm font-bold">Chọn avatar đại diện</label>
@@ -110,7 +110,7 @@ export default function ProfilePage() {
               className={`flex aspect-square items-center justify-center rounded-xl text-2xl transition hover:scale-110 ${
                 avatar === a
                   ? "bg-neon/20 ring-2 ring-neon"
-                  : "bg-white/5 hover:bg-white/10"
+                  : "bg-soft hover:bg-soft2"
               }`}
             >
               {a}

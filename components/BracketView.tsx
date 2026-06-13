@@ -7,7 +7,7 @@ import { formatTime, formatDate, dateKey } from "@/lib/format";
 
 /* Chiều cao phần thân bracket — mọi cột & line đều tính % theo chiều cao này */
 const BODY = "h-[760px]";
-const LINE = "bg-white/15";
+const LINE = "bg-line";
 
 /* Một ô trận đấu nhỏ trong nhánh */
 function BracketCard({ match, isToday }: { match: Match; isToday: boolean }) {
@@ -23,12 +23,12 @@ function BracketCard({ match, isToday }: { match: Match; isToday: boolean }) {
         live
           ? "live-dot border-red-500/50"
           : isToday
-            ? "border-ice/60 shadow-[0_0_24px_-4px_rgba(96,239,255,0.5)]"
+            ? "border-today shadow-[0_0_24px_-4px_var(--today)]"
             : ""
       }`}
     >
       {isToday && !live && (
-        <span className="absolute -top-2 left-1/2 z-10 -translate-x-1/2 whitespace-nowrap rounded-full bg-ice px-2 py-0.5 text-[9px] font-black uppercase tracking-wider text-pitch shadow">
+        <span className="absolute -top-2 left-1/2 z-10 -translate-x-1/2 whitespace-nowrap rounded-full bg-today px-2 py-0.5 text-[9px] font-black uppercase tracking-wider text-white shadow">
           ⚡ Hôm nay
         </span>
       )}
@@ -38,20 +38,20 @@ function BracketCard({ match, isToday }: { match: Match; isToday: boolean }) {
         score={match.status !== "scheduled" ? match.home_score : null}
         winner={homeWin}
       />
-      <div className="my-1.5 h-px bg-white/10" />
+      <div className="my-1.5 h-px bg-soft2" />
       <Row
         flag={match.away_team?.flag}
         name={match.away_team?.name ?? match.away_placeholder ?? "—"}
         score={match.status !== "scheduled" ? match.away_score : null}
         winner={awayWin}
       />
-      <p className="mt-1.5 text-center text-[10px] text-slate-500">
+      <p className="mt-1.5 text-center text-[10px] text-muted3">
         {live ? (
           <span className="font-bold text-red-400">● LIVE {match.minute}&apos;</span>
         ) : done ? (
           "Kết thúc"
         ) : (
-          <span className={isToday ? "font-bold text-ice" : ""}>
+          <span className={isToday ? "font-bold text-today" : ""}>
             {formatDate(match.kickoff_at)} · {formatTime(match.kickoff_at)}
           </span>
         )}
@@ -74,7 +74,7 @@ function Row({
   return (
     <div
       className={`flex items-center gap-1.5 ${
-        winner ? "font-extrabold text-neon" : score !== null && !winner ? "text-slate-400" : ""
+        winner ? "font-extrabold text-accent" : score !== null && !winner ? "text-muted2" : ""
       }`}
     >
       <span className="text-sm">{flag ?? "🏳️"}</span>
@@ -103,7 +103,7 @@ function RoundColumn({
       transition={{ delay, duration: 0.5 }}
       className="flex shrink-0 flex-col"
     >
-      <h3 className="mb-3 h-4 text-center text-xs font-black uppercase tracking-wider text-slate-400">
+      <h3 className="mb-3 h-4 text-center text-xs font-black uppercase tracking-wider text-muted2">
         {title}
       </h3>
       <div className={`flex ${BODY} flex-col justify-around`}>
@@ -179,7 +179,7 @@ export default function BracketView({ matches }: { matches: Match[] }) {
 
   if (matches.length === 0) {
     return (
-      <div className="glass rounded-3xl p-12 text-center text-slate-400">
+      <div className="glass rounded-3xl p-12 text-center text-muted2">
         Nhánh đấu sẽ hiện khi có dữ liệu — chạy seed.sql trong Supabase nhé!
       </div>
     );
@@ -205,7 +205,7 @@ export default function BracketView({ matches }: { matches: Match[] }) {
           transition={{ delay: 0.35 }}
           className="flex shrink-0 flex-col"
         >
-          <h3 className="mb-3 h-4 text-center text-xs font-black uppercase tracking-wider text-gold">
+          <h3 className="mb-3 h-4 text-center text-xs font-black uppercase tracking-wider text-trophy">
             🏆 Chung kết
           </h3>
           <div className={`relative flex ${BODY} flex-col justify-center`}>
@@ -216,7 +216,7 @@ export default function BracketView({ matches }: { matches: Match[] }) {
             )}
             {third && (
               <div className="absolute inset-x-0 bottom-2">
-                <p className="mb-2 text-center text-[10px] font-bold uppercase text-slate-500">
+                <p className="mb-2 text-center text-[10px] font-bold uppercase text-muted3">
                   Tranh hạng 3
                 </p>
                 <BracketCard match={third} isToday={dateKey(third.kickoff_at) === todayKey} />

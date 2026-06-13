@@ -35,13 +35,13 @@ export function StatusBadge({ match }: { match: Match }) {
   }
   if (match.status === "finished") {
     return (
-      <span className="rounded-full bg-white/5 px-2.5 py-0.5 text-xs font-semibold text-slate-400">
+      <span className="rounded-full bg-soft px-2.5 py-0.5 text-xs font-semibold text-muted2">
         Kết thúc
       </span>
     );
   }
   return (
-    <span className="rounded-full bg-ice/10 px-2.5 py-0.5 text-xs font-semibold text-ice">
+    <span className="rounded-full bg-today/10 px-2.5 py-0.5 text-xs font-semibold text-today">
       {formatDate(match.kickoff_at)}
     </span>
   );
@@ -60,7 +60,7 @@ export default function MatchCard({ match }: { match: Match }) {
         match.status === "live" ? "border-red-500/30" : ""
       }`}
     >
-      <div className="mb-3 flex items-center justify-between gap-2 text-xs text-slate-400">
+      <div className="mb-3 flex items-center justify-between gap-2 text-xs text-muted2">
         <span>
           {STAGE_LABELS[match.stage]}
           {match.group_name ? ` · Bảng ${match.group_name}` : ""}
@@ -84,7 +84,7 @@ export default function MatchCard({ match }: { match: Match }) {
               {match.home_score} - {match.away_score}
             </span>
           ) : (
-            <span className="text-lg font-bold text-slate-300 tabular-nums">
+            <span className="text-lg font-bold text-muted tabular-nums">
               {formatTime(match.kickoff_at)}
             </span>
           )}
@@ -97,7 +97,7 @@ export default function MatchCard({ match }: { match: Match }) {
       </div>
 
       {match.venue && (
-        <p className="mt-3 truncate text-center text-xs text-slate-500">
+        <p className="mt-3 truncate text-center text-xs text-muted3">
           📍 {match.venue}
         </p>
       )}

@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { AnimatePresence, motion } from "motion/react";
 import { useUser } from "@/hooks/useUser";
 import { isAnonymousName } from "@/lib/avatars";
+import ThemeToggle from "@/components/ThemeToggle";
 
 const LINKS = [
   { href: "/", label: "Trang chủ" },
@@ -35,14 +36,16 @@ export default function Navbar() {
               href={l.href}
               className={`whitespace-nowrap rounded-full px-3 py-1.5 text-sm font-medium transition-colors ${
                 pathname === l.href
-                  ? "bg-neon/15 text-neon"
-                  : "text-slate-300 hover:bg-white/5 hover:text-white"
+                  ? "bg-neon/15 text-accent"
+                  : "text-muted hover:bg-soft hover:text-fg"
               }`}
             >
               {l.label}
             </Link>
           ))}
         </div>
+
+        <ThemeToggle />
 
         <div className="relative shrink-0">
           {loading ? (
@@ -51,7 +54,7 @@ export default function Navbar() {
             <>
               <button
                 onClick={() => setMenuOpen((o) => !o)}
-                className={`flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-2.5 py-1.5 text-sm transition hover:border-neon/40 ${
+                className={`flex items-center gap-2 rounded-full border border-hairline bg-soft px-2.5 py-1.5 text-sm transition hover:border-neon/40 ${
                   isAnonymousName(profile.username) ? "ring-2 ring-hot/60" : ""
                 }`}
                 title={
@@ -77,7 +80,7 @@ export default function Navbar() {
                     <Link
                       href="/profile"
                       onClick={() => setMenuOpen(false)}
-                      className="block rounded-xl px-3 py-2 text-sm hover:bg-white/5"
+                      className="block rounded-xl px-3 py-2 text-sm hover:bg-soft"
                     >
                       ✏️ Đổi tên & avatar
                     </Link>
@@ -86,7 +89,7 @@ export default function Navbar() {
                         setMenuOpen(false);
                         signOut();
                       }}
-                      className="block w-full rounded-xl px-3 py-2 text-left text-sm text-slate-300 hover:bg-white/5"
+                      className="block w-full rounded-xl px-3 py-2 text-left text-sm text-muted hover:bg-soft"
                     >
                       👋 Đăng xuất
                     </button>

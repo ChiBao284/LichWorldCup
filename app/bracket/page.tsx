@@ -17,7 +17,7 @@ export default async function BracketPage() {
       <h1 className="mb-2 text-4xl font-black sm:text-5xl">
         Nhánh đấu <span className="text-gradient">knockout</span> 🏆
       </h1>
-      <p className="mb-8 text-slate-400">
+      <p className="mb-8 text-muted2">
         32 đội vượt qua vòng bảng — thua là về nước. Kéo ngang để xem toàn bộ nhánh.
       </p>
       <BracketView matches={knockout} />

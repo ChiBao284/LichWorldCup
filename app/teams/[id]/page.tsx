@@ -39,7 +39,7 @@ export default async function TeamPage({
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-10">
-      <Link href="/teams" className="text-sm text-slate-400 hover:text-neon">
+      <Link href="/teams" className="text-sm text-muted2 hover:text-accent">
         ← Tất cả đội tuyển
       </Link>
 
@@ -47,7 +47,7 @@ export default async function TeamPage({
         <span className="text-7xl drop-shadow-xl sm:text-8xl">{team.flag}</span>
         <div>
           <h1 className="text-4xl font-black sm:text-5xl">{team.name}</h1>
-          <p className="mt-1 text-slate-400">
+          <p className="mt-1 text-muted2">
             Bảng {team.group_name}
             {team.fifa_rank ? ` · Hạng ${team.fifa_rank} FIFA` : ""}
           </p>
@@ -61,7 +61,7 @@ export default async function TeamPage({
             Đội hình <span className="text-gradient">⚽</span>
           </h2>
           {players.length === 0 ? (
-            <div className="glass rounded-2xl p-8 text-center text-slate-400">
+            <div className="glass rounded-2xl p-8 text-center text-muted2">
               Đội hình đang được cập nhật... 📋
             </div>
           ) : (
@@ -71,7 +71,7 @@ export default async function TeamPage({
                 if (list.length === 0) return null;
                 return (
                   <div key={pos}>
-                    <h3 className="mb-2 text-sm font-bold uppercase tracking-wider text-slate-400">
+                    <h3 className="mb-2 text-sm font-bold uppercase tracking-wider text-muted2">
                       {POSITION_ICONS[pos]} {POSITION_LABELS[pos]}
                     </h3>
                     <ul className="grid gap-2 sm:grid-cols-2">
@@ -80,11 +80,11 @@ export default async function TeamPage({
                           key={p.id}
                           className="glass flex items-center gap-3 rounded-xl px-4 py-2.5"
                         >
-                          <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-white/5 text-xs font-black text-neon tabular-nums">
+                          <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-soft text-xs font-black text-accent tabular-nums">
                             {p.shirt_number ?? "–"}
                           </span>
                           <span className="truncate font-semibold">{p.name}</span>
-                          <span className="ml-auto shrink-0 text-xs text-slate-500">
+                          <span className="ml-auto shrink-0 text-xs text-muted3">
                             {POSITION_LABELS[p.position]}
                           </span>
                         </li>
@@ -104,7 +104,7 @@ export default async function TeamPage({
           </h2>
           <div className="space-y-3">
             {teamMatches.length === 0 ? (
-              <p className="text-slate-500">Chưa có trận nào.</p>
+              <p className="text-muted3">Chưa có trận nào.</p>
             ) : (
               teamMatches.map((m: Match) => <MatchCard key={m.id} match={m} />)
             )}

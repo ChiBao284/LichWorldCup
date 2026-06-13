@@ -1,12 +1,107 @@
 @import "tailwindcss";
 
+/* ===================== THEME TOKENS ===================== */
+/* Mặc định = SÁNG (:root). Thêm class .dark trên <html> để chuyển TỐI. */
+:root {
+  --bg: #eef2f9;
+  --fg: #0f172a;
+  --muted: #475569; /* chữ phụ */
+  --muted2: #64748b; /* chữ nhạt hơn */
+  --muted3: #94a3b8; /* chữ rất nhạt */
+  --card: #ffffff; /* nền đặc: vòng avatar... */
+  --soft: rgba(15, 23, 42, 0.045); /* tint mờ trên nền sáng */
+  --soft2: rgba(15, 23, 42, 0.08);
+  --hairline: rgba(15, 23, 42, 0.1); /* viền mảnh */
+  --accent: #0a9d6e; /* xanh đọc rõ trên nền sáng (link, nhấn) */
+  --today: #0284c7; /* nhấn "hôm nay" */
+  --trophy: #b45309; /* nhấn cúp/chung kết */
+  --line: rgba(15, 23, 42, 0.18); /* đường nối nhánh đấu */
+
+  --glass-bg: rgba(255, 255, 255, 0.72);
+  --glass-border: rgba(15, 23, 42, 0.08);
+  --glass-shadow: 0 8px 30px -12px rgba(15, 23, 42, 0.18);
+  --glass-hover-border: rgba(10, 157, 110, 0.45);
+  --glass-hover-shadow: 0 16px 44px -16px rgba(10, 157, 110, 0.3);
+
+  --grad-a: #059669;
+  --grad-b: #0891b2;
+  --gradhot-a: #db2777;
+  --gradhot-b: #d97706;
+
+  --scroll-track: #e2e8f0;
+  --scroll-thumb: #cbd5e1;
+  --scroll-thumb-hover: #94a3b8;
+
+  --shimmer-base: #e9eef5;
+  --shimmer-mid: #f3f6fb;
+
+  --mesh-1: rgba(5, 150, 105, 0.1);
+  --mesh-2: rgba(8, 145, 178, 0.1);
+  --mesh-3: rgba(219, 39, 119, 0.07);
+  --grid: rgba(15, 23, 42, 0.04);
+}
+
+html.dark {
+  --bg: #04060e;
+  --fg: #e8edf7;
+  --muted: #cbd5e1;
+  --muted2: #94a3b8;
+  --muted3: #64748b;
+  --card: #0b101f;
+  --soft: rgba(255, 255, 255, 0.05);
+  --soft2: rgba(255, 255, 255, 0.1);
+  --hairline: rgba(255, 255, 255, 0.1);
+  --accent: #00ff87;
+  --today: #60efff;
+  --trophy: #ffd166;
+  --line: rgba(255, 255, 255, 0.15);
+
+  --glass-bg: rgba(255, 255, 255, 0.04);
+  --glass-border: rgba(255, 255, 255, 0.08);
+  --glass-shadow: none;
+  --glass-hover-border: rgba(0, 255, 135, 0.35);
+  --glass-hover-shadow: 0 12px 40px -12px rgba(0, 255, 135, 0.25);
+
+  --grad-a: #00ff87;
+  --grad-b: #60efff;
+  --gradhot-a: #ff2e9a;
+  --gradhot-b: #ffd166;
+
+  --scroll-track: #04060e;
+  --scroll-thumb: #1c2640;
+  --scroll-thumb-hover: #2a3a60;
+
+  --shimmer-base: #0b101f;
+  --shimmer-mid: #141d35;
+
+  --mesh-1: rgba(0, 255, 135, 0.08);
+  --mesh-2: rgba(96, 239, 255, 0.07);
+  --mesh-3: rgba(255, 46, 154, 0.06);
+  --grid: rgba(255, 255, 255, 0.025);
+}
+
+/* Map token runtime -> tiện ích Tailwind (inline = giữ var() để đổi lúc chạy) */
 @theme inline {
-  --color-pitch: #04060e;
-  --color-surface: #0b101f;
-  --color-neon: #00ff87;
+  --color-pitch: #04060e; /* CỐ ĐỊNH: chữ tối trên nút accent sáng */
+  --color-neon: #00ff87; /* màu accent sáng cố định cho nền/viền */
   --color-ice: #60efff;
   --color-hot: #ff2e9a;
   --color-gold: #ffd166;
+
+  --color-bg: var(--bg);
+  --color-fg: var(--fg);
+  --color-muted: var(--muted);
+  --color-muted2: var(--muted2);
+  --color-muted3: var(--muted3);
+  --color-card: var(--card);
+  --color-soft: var(--soft);
+  --color-soft2: var(--soft2);
+  --color-hairline: var(--hairline);
+  --color-accent: var(--accent);
+  --color-today: var(--today);
+  --color-trophy: var(--trophy);
+  --color-line: var(--line);
+
   --font-sans: var(--font-be-vietnam), system-ui, sans-serif;
   --animate-float: float 6s ease-in-out infinite;
   --animate-float-slow: float 9s ease-in-out infinite;
@@ -48,14 +143,15 @@ html {
 }
 
 body {
-  background-color: var(--color-pitch);
-  color: #e8edf7;
+  background-color: var(--bg);
+  color: var(--fg);
   overflow-x: hidden;
+  transition: background-color 0.4s ease, color 0.4s ease;
 }
 
 ::selection {
-  background: var(--color-neon);
-  color: #04060e;
+  background: var(--accent);
+  color: #fff;
 }
 
 ::-webkit-scrollbar {
@@ -63,19 +159,19 @@ body {
   height: 8px;
 }
 ::-webkit-scrollbar-track {
-  background: #04060e;
+  background: var(--scroll-track);
 }
 ::-webkit-scrollbar-thumb {
-  background: #1c2640;
+  background: var(--scroll-thumb);
   border-radius: 8px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #2a3a60;
+  background: var(--scroll-thumb-hover);
 }
 
-/* Chữ gradient neon dùng khắp nơi */
+/* Chữ gradient nhấn — đổi màu theo theme cho dễ đọc */
 .text-gradient {
-  background: linear-gradient(110deg, #00ff87, #60efff, #00ff87);
+  background: linear-gradient(110deg, var(--grad-a), var(--grad-b), var(--grad-a));
   background-size: 200% auto;
   -webkit-background-clip: text;
   background-clip: text;
@@ -84,7 +180,7 @@ body {
 }
 
 .text-gradient-hot {
-  background: linear-gradient(110deg, #ff2e9a, #ffd166, #ff2e9a);
+  background: linear-gradient(110deg, var(--gradhot-a), var(--gradhot-b), var(--gradhot-a));
   background-size: 200% auto;
   -webkit-background-clip: text;
   background-clip: text;
@@ -92,10 +188,17 @@ body {
   animation: gradient-x 6s ease infinite;
 }
 
+/* Chữ viền rỗng (tiêu đề "2026") */
+.text-stroke {
+  -webkit-text-stroke: 2px var(--fg);
+  color: transparent;
+}
+
 /* Card kính mờ */
 .glass {
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shadow);
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
 }
@@ -104,19 +207,19 @@ body {
   transition: border-color 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
 }
 .glass-hover:hover {
-  border-color: rgba(0, 255, 135, 0.35);
+  border-color: var(--glass-hover-border);
   transform: translateY(-3px);
-  box-shadow: 0 12px 40px -12px rgba(0, 255, 135, 0.25);
+  box-shadow: var(--glass-hover-shadow);
 }
 
-/* Nền sân vận động: lưới + quầng sáng */
+/* Nền sân vận động: lưới + quầng sáng (đổi theo theme) */
 .pitch-bg {
   background-image:
-    radial-gradient(ellipse 60% 40% at 20% 0%, rgba(0, 255, 135, 0.08), transparent),
-    radial-gradient(ellipse 50% 40% at 80% 10%, rgba(96, 239, 255, 0.07), transparent),
-    radial-gradient(ellipse 40% 30% at 50% 100%, rgba(255, 46, 154, 0.06), transparent),
-    linear-gradient(rgba(255, 255, 255, 0.025) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255, 255, 255, 0.025) 1px, transparent 1px);
+    radial-gradient(ellipse 60% 40% at 20% 0%, var(--mesh-1), transparent),
+    radial-gradient(ellipse 50% 40% at 80% 10%, var(--mesh-2), transparent),
+    radial-gradient(ellipse 40% 30% at 50% 100%, var(--mesh-3), transparent),
+    linear-gradient(var(--grid) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid) 1px, transparent 1px);
   background-size: 100% 100%, 100% 100%, 100% 100%, 56px 56px, 56px 56px;
 }
 
@@ -127,7 +230,7 @@ body {
 
 /* Skeleton shimmer */
 .shimmer {
-  background: linear-gradient(90deg, #0b101f 25%, #141d35 50%, #0b101f 75%);
+  background: linear-gradient(90deg, var(--shimmer-base) 25%, var(--shimmer-mid) 50%, var(--shimmer-base) 75%);
   background-size: 200% 100%;
   animation: shimmer 2.5s linear infinite;
 }

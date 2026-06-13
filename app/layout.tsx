@@ -15,17 +15,27 @@ export const metadata: Metadata = {
     "Lịch thi đấu World Cup 2026, tỉ số trực tiếp, nhánh đấu knockout, pick đội yêu thích cùng đồng nghiệp và bảng xếp hạng thánh dự đoán.",
 };
 
+// Áp theme trước khi React hydrate để không bị nháy (mặc định: sáng)
+const themeScript = `(function(){try{var t=localStorage.getItem('theme');if(t==='dark')document.documentElement.classList.add('dark');}catch(e){}})();`;
+
 export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="vi" className={`${beVietnam.variable} h-full antialiased`}>
+    <html
+      lang="vi"
+      className={`${beVietnam.variable} h-full antialiased`}
+      suppressHydrationWarning
+    >
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: themeScript }} />
+      </head>
       <body className="min-h-full flex flex-col font-sans pitch-bg">
         <Navbar />
         <main className="flex-1">{children}</main>
-        <footer className="border-t border-white/5 py-8 text-center text-sm text-slate-500">
+        <footer className="border-t border-hairline py-8 text-center text-sm text-muted3">
           <p>
             ⚽ Lịch World Cup 2026 — làm cho vui, thua thì{" "}
             <span className="text-gradient-hot font-semibold">đi mua nước</span>{" "}
