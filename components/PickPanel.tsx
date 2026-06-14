@@ -99,13 +99,20 @@ export default function PickPanel({ match }: { match: Match }) {
       signInWithGoogle();
       return;
     }
+    // Mỗi người chỉ được pick 1 lần duy nhất, không cho đổi.
+    if (myPick) return;
+    const team = teamId === match.home_team_id ? home : away;
+    const ok = window.confirm(
+      `Bạn chỉ được pick 1 lần duy nhất cho trận này và KHÔNG thể đổi sau đó.\n\nXác nhận chọn ${team?.name}?`
+    );
+    if (!ok) return;
+
     setSaving(true);
-    await supabaseBrowser()
+    // insert (không upsert) — ràng buộc unique(match_id,user_id) chặn pick lần 2.
+    const { error } = await supabaseBrowser()
       .from("picks")
-      .upsert(
-        { match_id: match.id, user_id: user.id, team_id: teamId },
-        { onConflict: "match_id,user_id" }
-      );
+      .insert({ match_id: match.id, user_id: user.id, team_id: teamId });
+    if (error) console.warn("[pick] không lưu được:", error.message);
     await loadPicks();
     setSaving(false);
   }
@@ -155,20 +162,32 @@ export default function PickPanel({ match }: { match: Match }) {
         {sides.map(({ team, picksList, pct, pctClass, mineBorder }) => {
           const isMine = myPick?.team_id === team.id;
           const isLeader = leader === team.id;
+          // Đã pick rồi (decided) hoặc trận khoá → không cho bấm nữa.
+          const decided = !!myPick;
+          const canInteract = !locked && !decided && !saving;
           return (
             <motion.button
               key={team.id}
               onClick={() => pick(team.id)}
-              disabled={locked || saving}
-              whileHover={locked ? undefined : { scale: 1.03, y: -2 }}
-              whileTap={locked ? undefined : { scale: 0.96 }}
+              disabled={locked || saving || decided}
+              whileHover={canInteract ? { scale: 1.03, y: -2 } : undefined}
+              whileTap={canInteract ? { scale: 0.96 } : undefined}
               transition={{ duration: 0.3 }}
               className={`group relative overflow-hidden rounded-2xl border p-4 text-left transition-colors ${
                 isMine
                   ? mineBorder
-                  : "border-hairline bg-card hover:border-fg/30"
-              } ${locked ? "cursor-default opacity-90" : "cursor-pointer"}`}
+                  : `border-hairline bg-card ${
+                      canInteract ? "hover:border-fg/30" : ""
+                    }`
+              } ${canInteract ? "cursor-pointer" : "cursor-default"}`}
             >
+              {/* Ruy băng khoá xéo góc phải trên — chỉ ở đội bạn đã pick */}
+              {decided && isMine && (
+                <span className="pointer-events-none absolute right-[-34px] top-[14px] z-30 w-[110px] rotate-45 bg-fg/85 py-[3px] text-center text-[11px] leading-none text-bg shadow-md">
+                  🔒
+                </span>
+              )}
+
               {/* Vương miện đội đang dẫn */}
               <AnimatePresence>
                 {isLeader && total > 0 && (
@@ -187,7 +206,7 @@ export default function PickPanel({ match }: { match: Match }) {
               <div className="relative mb-1 flex items-center gap-2">
                 <motion.span
                   className="text-3xl"
-                  whileHover={{ scale: 1.15, rotate: -6 }}
+                  whileHover={canInteract ? { scale: 1.15, rotate: -6 } : undefined}
                 >
                   {team.flag}
                 </motion.span>
@@ -270,7 +289,19 @@ export default function PickPanel({ match }: { match: Match }) {
           </button>{" "}
           và pick
         </p>
-      ) : null}
+      ) : myPick ? (
+        <p className="mt-4 text-center text-xs text-muted2">
+          ✓ Bạn đã chọn{" "}
+          <b className="text-fg">
+            {myPick.team_id === home.id ? home.name : away.name}
+          </b>{" "}
+          — mỗi người chỉ pick 1 lần, không đổi được nha 😉
+        </p>
+      ) : (
+        <p className="mt-4 text-center text-xs font-semibold text-accent">
+          ⚠️ Mỗi trận chỉ được pick 1 lần duy nhất — chọn xong không đổi được.
+        </p>
+      )}
 
       {/* Link nước: ai cũng dán được, bấm để mở quán & đặt nước */}
       <MatchDrinkLinks matchId={match.id} />

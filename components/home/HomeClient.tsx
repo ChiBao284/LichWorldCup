@@ -19,6 +19,7 @@ import MatchCard, { StatusBadge } from '@/components/MatchCard';
 import MatchEvents from '@/components/MatchEvents';
 import PickPanel from '@/components/PickPanel';
 import Avatar from '@/components/Avatar';
+import { formatTime } from '@/lib/format';
 import type { LeaderboardRow, Match, Team } from '@/lib/types';
 
 /* ---------- Số đếm chạy khi scroll tới ---------- */
@@ -80,6 +81,12 @@ export default function HomeClient({
     leaderboard,
 }: Props) {
     const [matches, setMatches] = useState(initial);
+    // Đồng hồ hiện tại, cập nhật mỗi 30s để lọc trận "sắp bắt đầu".
+    const [now, setNow] = useState(() => Date.now());
+    useEffect(() => {
+        const id = setInterval(() => setNow(Date.now()), 30_000);
+        return () => clearInterval(id);
+    }, []);
 
     /* Realtime: tỉ số & trạng thái trận đấu cập nhật trực tiếp */
     useEffect(() => {
@@ -105,11 +112,34 @@ export default function HomeClient({
         };
     }, []);
 
-    const live = matches.filter((m) => m.status === 'live');
     /* Tỉ số trực tiếp từ ESPN — chỉ cập nhật phần score cho các trận live */
     const liveScores = useLiveScores(matches);
+
+    /* Trận cầu tâm điểm: đang đá + sắp bắt đầu trong 30' (để đặt nước trước) */
+    const SOON_MS = 60 * 60_000;
+    const featured = matches
+        .filter((m) => {
+            if (m.status === 'live') return true;
+            if (m.status === 'scheduled' && m.home_team_id) {
+                const ko = Date.parse(m.kickoff_at);
+                return ko > now && ko - now <= SOON_MS;
+            }
+            return false;
+        })
+        .sort((a, b) => {
+            if (a.status !== b.status) return a.status === 'live' ? -1 : 1;
+            return Date.parse(a.kickoff_at) - Date.parse(b.kickoff_at);
+        });
+
+    // Trận đã lên "tâm điểm" thì khỏi lặp lại ở mục "Sắp diễn ra".
+    const featuredIds = new Set(featured.map((m) => m.id));
     const upcoming = matches
-        .filter((m) => m.status === 'scheduled' && m.home_team_id)
+        .filter(
+            (m) =>
+                m.status === 'scheduled' &&
+                m.home_team_id &&
+                !featuredIds.has(m.id),
+        )
         .slice(0, 6);
     const finished = matches
         .filter((m) => m.status === 'finished')
@@ -254,21 +284,22 @@ export default function HomeClient({
                     <Reveal>
                         <p className="eyebrow text-accent flex items-center gap-2">
                             <span className="live-dot inline-block h-2 w-2 rounded-full bg-live" />
-                            Đang diễn ra
+                            Đang diễn ra & sắp bắt đầu
                         </p>
                         <h2 className="mt-3 font-display uppercase text-fg text-[clamp(34px,6vw,68px)] leading-[0.86] tracking-tight">
                             Trận cầu tâm điểm
                         </h2>
                     </Reveal>
 
-                    {live.length === 0 ? (
+                    {featured.length === 0 ? (
                         <Reveal className="mt-8">
                             <div className="glass rounded-[22px] p-10 text-center">
                                 <p className="font-display uppercase text-fg text-2xl leading-none">
-                                    Chưa có trận nào đang lăn bóng
+                                    Chưa có trận nào đang đá hay sắp bắt đầu
                                 </p>
                                 <p className="mt-3 text-muted">
-                                    Trận đấu sẽ hiện ở đây ngay khi bóng lăn.{' '}
+                                    Trận sẽ hiện ở đây trước giờ bóng lăn 30
+                                    phút để mọi người đặt nước trước.{' '}
                                     <Link
                                         href="/schedule"
                                         className="font-semibold text-accent">
@@ -279,10 +310,18 @@ export default function HomeClient({
                         </Reveal>
                     ) : (
                         <div className="mt-8 space-y-10">
-                            {live.map((m, i) => {
+                            {featured.map((m, i) => {
                                 const ls = liveScores[m.id];
                                 const hs = ls ? ls.home : m.home_score;
                                 const as = ls ? ls.away : m.away_score;
+                                const isLive = m.status === 'live';
+                                const minsToKickoff = Math.max(
+                                    0,
+                                    Math.round(
+                                        (Date.parse(m.kickoff_at) - now) /
+                                            60_000,
+                                    ),
+                                );
                                 return (
                                     <Reveal key={m.id} delay={i * 0.1}>
                                         <div className="grid gap-4 lg:grid-cols-2">
@@ -295,7 +334,7 @@ export default function HomeClient({
                                                         <span className="text-[clamp(54px,9vw,96px)] leading-none">
                                                             {m.home_team?.flag}
                                                         </span>
-                                                        <span className="font-display uppercase text-fg text-[clamp(22px,3.4vw,40px)] leading-[0.9]">
+                                                        <span className="font-display uppercase text-fg text-[clamp(15px,2.2vw,26px)] leading-[0.95]">
                                                             {m.home_team?.name}
                                                         </span>
                                                         <span className="font-mono text-[11px] uppercase tracking-wider text-muted2">
@@ -305,28 +344,54 @@ export default function HomeClient({
                                                         </span>
                                                     </div>
 
-                                                    {/* Giữa: live + tỉ số */}
+                                                    {/* Giữa: live → tỉ số · sắp đá → giờ + đếm ngược */}
                                                     <div className="flex flex-col items-center gap-3">
-                                                        <StatusBadge
-                                                            match={m}
-                                                            detail={ls?.detail}
-                                                        />
-                                                        <motion.div
-                                                            key={`${hs}-${as}`}
-                                                            initial={{
-                                                                scale: 1.4,
-                                                            }}
-                                                            animate={{
-                                                                scale: 1,
-                                                            }}
-                                                            transition={{
-                                                                type: 'spring',
-                                                                stiffness: 200,
-                                                                damping: 14,
-                                                            }}
-                                                            className="font-display tabular-nums text-fg text-[clamp(48px,11vw,112px)] leading-[0.82]">
-                                                            {hs}–{as}
-                                                        </motion.div>
+                                                        {isLive ? (
+                                                            <>
+                                                                <StatusBadge
+                                                                    match={m}
+                                                                    detail={
+                                                                        ls?.detail
+                                                                    }
+                                                                />
+                                                                <motion.div
+                                                                    key={`${hs}-${as}`}
+                                                                    initial={{
+                                                                        scale: 1.4,
+                                                                    }}
+                                                                    animate={{
+                                                                        scale: 1,
+                                                                    }}
+                                                                    transition={{
+                                                                        type: 'spring',
+                                                                        stiffness: 200,
+                                                                        damping: 14,
+                                                                    }}
+                                                                    className="font-display tabular-nums text-fg text-[clamp(48px,11vw,112px)] leading-[0.82]">
+                                                                    {hs}–{as}
+                                                                </motion.div>
+                                                            </>
+                                                        ) : (
+                                                            <>
+                                                                <span className="inline-flex items-center gap-1.5 rounded-full bg-accent/10 px-2.5 py-0.5 font-mono text-[11px] font-bold uppercase tracking-wider text-accent">
+                                                                    ⏳ Sắp bắt
+                                                                    đầu
+                                                                </span>
+                                                                <div className="font-display tabular-nums text-fg text-[clamp(30px,6vw,56px)] leading-[0.9]">
+                                                                    {formatTime(
+                                                                        m.kickoff_at,
+                                                                    )}
+                                                                </div>
+                                                                <span className="font-mono text-[11px] uppercase tracking-wider text-muted2">
+                                                                    Còn{' '}
+                                                                    {
+                                                                        minsToKickoff
+                                                                    }
+                                                                    ′ · đặt nước
+                                                                    đi 🧋
+                                                                </span>
+                                                            </>
+                                                        )}
                                                     </div>
 
                                                     {/* Đội khách */}
@@ -334,7 +399,7 @@ export default function HomeClient({
                                                         <span className="text-[clamp(54px,9vw,96px)] leading-none">
                                                             {m.away_team?.flag}
                                                         </span>
-                                                        <span className="font-display uppercase text-fg text-[clamp(22px,3.4vw,40px)] leading-[0.9]">
+                                                        <span className="font-display uppercase text-fg text-[clamp(15px,2.2vw,26px)] leading-[0.95]">
                                                             {m.away_team?.name}
                                                         </span>
                                                         <span className="font-mono text-[11px] uppercase tracking-wider text-muted2">
