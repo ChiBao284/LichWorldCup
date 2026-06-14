@@ -9,6 +9,7 @@ import { StatusBadge } from '@/components/MatchCard';
 import MatchEvents from '@/components/MatchEvents';
 import PickPanel from '@/components/PickPanel';
 import DrinkSection from '@/components/DrinkSection';
+import WatchLiveButton from '@/components/WatchLiveButton';
 import { STAGE_LABELS } from '@/lib/types';
 import { formatFullDate } from '@/lib/format';
 import type { GoalEvent, Match } from '@/lib/types';
@@ -155,6 +156,16 @@ export default function MatchDetailClient({
                     </div>
                 </div>
             </motion.div>
+
+            {/* Xem trực tiếp — chỉ hiện khi trận đang đá */}
+            {match.status === 'live' && (
+                <motion.div
+                    initial={{ opacity: 0, y: 24 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.05 }}>
+                    <WatchLiveButton size="md" className="w-full" />
+                </motion.div>
+            )}
 
             {/* Pick đội */}
             {home && away && (
