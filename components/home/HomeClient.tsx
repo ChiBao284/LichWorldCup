@@ -282,10 +282,10 @@ export default function HomeClient({
                 {/* ================= TRẬN LIVE TÂM ĐIỂM ================= */}
                 <section id="live" className="scroll-mt-20">
                     <Reveal>
-                        <p className="eyebrow text-accent flex items-center gap-2">
+                        {/* <p className="eyebrow text-accent flex items-center gap-2">
                             <span className="live-dot inline-block h-2 w-2 rounded-full bg-live" />
                             Đang diễn ra & sắp bắt đầu
-                        </p>
+                        </p> */}
                         <h2 className="mt-3 font-display uppercase text-fg text-[clamp(34px,6vw,68px)] leading-[0.86] tracking-tight">
                             Trận cầu tâm điểm
                         </h2>
