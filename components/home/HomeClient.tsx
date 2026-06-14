@@ -116,7 +116,7 @@ export default function HomeClient({
     const liveScores = useLiveScores(matches);
 
     /* Trận cầu tâm điểm: đang đá + sắp bắt đầu trong 30' (để đặt nước trước) */
-    const SOON_MS = 60 * 60_000;
+    const SOON_MS = 30 * 60_000;
     const featured = matches
         .filter((m) => {
             if (m.status === 'live') return true;
