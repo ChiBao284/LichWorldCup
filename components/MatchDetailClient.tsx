@@ -9,7 +9,7 @@ import PickPanel from "@/components/PickPanel";
 import DrinkSection from "@/components/DrinkSection";
 import { STAGE_LABELS } from "@/lib/types";
 import { formatFullDate } from "@/lib/format";
-import type { Match } from "@/lib/types";
+import type { GoalEvent, Match } from "@/lib/types";
 
 export default function MatchDetailClient({ match: initial }: { match: Match }) {
   const [match, setMatch] = useState(initial);
@@ -95,6 +95,16 @@ export default function MatchDetailClient({ match: initial }: { match: Match }) 
             />
           </div>
 
+          {/* Diễn biến bàn thắng */}
+          {showScore &&
+            ((match.home_goals?.length ?? 0) > 0 ||
+              (match.away_goals?.length ?? 0) > 0) && (
+              <div className="mt-7 grid grid-cols-2 gap-3 border-t border-hairline pt-5 text-sm">
+                <GoalList goals={match.home_goals} align="left" />
+                <GoalList goals={match.away_goals} align="right" />
+              </div>
+            )}
+
           <div className="mt-7 space-y-1 text-center text-sm text-muted2">
             <p className="capitalize">🗓 {formatFullDate(match.kickoff_at)} (giờ VN)</p>
             {match.venue && <p>📍 {match.venue}</p>}
@@ -124,6 +134,39 @@ export default function MatchDetailClient({ match: initial }: { match: Match }) 
         </motion.div>
       )}
     </div>
+  );
+}
+
+/** Danh sách bàn thắng của một đội. */
+function GoalList({
+  goals,
+  align,
+}: {
+  goals?: GoalEvent[] | null;
+  align: "left" | "right";
+}) {
+  if (!goals || goals.length === 0) return <div />;
+  return (
+    <ul
+      className={`space-y-1.5 ${align === "right" ? "text-right" : "text-left"}`}
+    >
+      {goals.map((g, i) => (
+        <li
+          key={`${g.name}-${g.minute}-${i}`}
+          className={`flex items-center gap-1.5 ${
+            align === "right" ? "flex-row-reverse" : ""
+          }`}
+        >
+          <span>⚽</span>
+          <span className="font-semibold">
+            {g.name}
+            <span className="ml-1 font-mono text-xs text-muted2">{g.minute}&apos;</span>
+            {g.penalty && <span className="ml-1 text-xs text-muted2">(pen)</span>}
+            {g.owngoal && <span className="ml-1 text-xs text-muted2">(OG)</span>}
+          </span>
+        </li>
+      ))}
+    </ul>
   );
 }
 

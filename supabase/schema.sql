@@ -37,7 +37,10 @@ create table public.matches (
   status text not null default 'scheduled' check (status in ('scheduled','live','finished')),
   home_score int not null default 0,
   away_score int not null default 0,
-  minute int                        -- phút thi đấu khi đang live
+  minute int,                       -- phút thi đấu khi đang live
+  ext_id text unique,               -- khoá ổn định để /api/sync upsert (worldcup.json)
+  home_goals jsonb,                 -- diễn biến bàn thắng đội nhà
+  away_goals jsonb                  -- diễn biến bàn thắng đội khách
 );
 create index matches_kickoff_idx on public.matches(kickoff_at);
 create index matches_status_idx on public.matches(status);

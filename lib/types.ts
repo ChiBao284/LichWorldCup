@@ -17,6 +17,15 @@ export type Player = {
 export type MatchStage = "group" | "r32" | "r16" | "qf" | "sf" | "third" | "final";
 export type MatchStatus = "scheduled" | "live" | "finished";
 
+/** Một bàn thắng (từ worldcup.json goals1/goals2). */
+export type GoalEvent = {
+  name: string;
+  minute: number;
+  offset?: number;
+  owngoal?: boolean;
+  penalty?: boolean;
+};
+
 export type Match = {
   id: number;
   stage: MatchStage;
@@ -32,6 +41,8 @@ export type Match = {
   home_score: number;
   away_score: number;
   minute: number | null;
+  home_goals?: GoalEvent[] | null;
+  away_goals?: GoalEvent[] | null;
   home_team?: Team | null;
   away_team?: Team | null;
 };

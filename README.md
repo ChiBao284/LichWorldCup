@@ -22,7 +22,8 @@ pick đội yêu thích, bảng xếp hạng thánh dự đoán, và luật vui 
 1. Tạo project tại [supabase.com](https://supabase.com).
 2. Mở **SQL Editor**, chạy lần lượt:
    - [`supabase/schema.sql`](supabase/schema.sql) — bảng, RLS, trigger, realtime
-   - [`supabase/seed.sql`](supabase/seed.sql) — 48 đội, cầu thủ, 104 trận (tự tính trận nào đã đá/đang live theo thời điểm chạy)
+   - [`supabase/02_worldcup_live.sql`](supabase/02_worldcup_live.sql) — thêm cột đồng bộ + xoá seed giả (DB sẽ được nạp dữ liệu THẬT qua `/api/sync`)
+   - (không cần `seed.sql` nữa — lịch/đội/tỉ số lấy thật từ `worldcup.json`; cầu thủ đọc từ [`app/data/worldcup.squads.json`](app/data/worldcup.squads.json))
 3. Bật đăng nhập Google: **Authentication → Providers → Google**
    - Tạo OAuth Client tại [Google Cloud Console](https://console.cloud.google.com/apis/credentials) (loại Web).
    - Authorized redirect URI: `https://<project-ref>.supabase.co/auth/v1/callback`
@@ -62,22 +63,22 @@ Thêm các biến môi trường trong Vercel (Settings → Environment Variable
 
 Sau khi deploy, nhớ cập nhật Site URL/Redirect URLs trong Supabase thành domain Vercel.
 
-## 4. Cập nhật tỉ số live
+## 4. Dữ liệu thật & cập nhật live (worldcup.json)
 
-Tỉ số đổi trong database là mọi client thấy ngay (Realtime). Hai cách:
+Lịch thi đấu + tỉ số + diễn biến bàn thắng được lấy THẬT từ
+`https://raw.githubusercontent.com/upbound-web/worldcup-live.json/master/2026/worldcup.json`.
 
-**Cách 1 — Supabase Table Editor:** sửa trực tiếp `home_score`, `away_score`, `status` (`scheduled` → `live` → `finished`), `minute`.
+- **Route `/api/sync`** ([app/api/sync/route.ts](app/api/sync/route.ts)) tải file đó về, ánh xạ
+  (tên đội Anh → mã FIFA + cờ, round → vòng, parse giờ kèm offset UTC, suy ra trạng thái
+  live/finished, lưu `goals1/goals2`) rồi **upsert** vào bảng `teams` + `matches` (khoá `ext_id`).
+  Picks / đặt nước / BXH vẫn chạy trên các bảng này như cũ — **không vỡ**.
+- **Tự gọi mỗi 90s**: [components/LiveSync.tsx](components/LiveSync.tsx) gọi `/api/sync` khi mở app
+  và lặp lại mỗi 90 giây. DB cập nhật → mọi client đang mở thấy ngay nhờ Supabase Realtime.
+- **Cần** `SUPABASE_SERVICE_ROLE_KEY` trong env (route ghi DB bằng service role). Thiếu key thì
+  route bỏ qua an toàn.
+- (Tuỳ chọn) thêm **Vercel Cron** gọi `/api/sync` mỗi phút để cập nhật ngay cả khi không ai mở web.
 
-**Cách 2 — API admin:**
-
-```bash
-curl -X POST https://<domain>/api/admin/score \
-  -H "x-admin-secret: $ADMIN_SECRET" -H "Content-Type: application/json" \
-  -d '{"match_id": 1, "home_score": 2, "away_score": 1, "status": "live", "minute": 67}'
-```
-
-Khi trận knockout xác định được 2 đội, cập nhật `home_team_id`/`away_team_id`
-của trận đó trong bảng `matches` là bracket tự hiện tên đội.
+> Vẫn còn `/api/admin/score` để chỉnh tay một trận, nhưng lần sync kế tiếp sẽ ghi đè bằng dữ liệu thật.
 
 ## Cấu trúc chính
 
@@ -94,4 +95,11 @@ app/
 components/             # PickPanel, DrinkSection, BracketView, ...
 lib/                    # Supabase clients, types, avatars, format
 supabase/               # schema.sql + seed.sql
+```
+
+API github lây team member
+```
+curl -L \
+  -H "Accept: application/vnd.github.raw+json" \
+  "https://api.github.com/repos/upbound-web/worldcup-live.json/contents/2026/worldcup.squads.json"
 ```

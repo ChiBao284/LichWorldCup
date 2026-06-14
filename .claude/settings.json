@@ -9,7 +9,10 @@
       "Bash(kill %1)",
       "Bash(rm -f /tmp/wc2.css /tmp/wc2.log)",
       "Bash(PATH=/opt/homebrew/bin:__TRACKED_VAR__ npx eslint app components lib hooks)",
-      "Bash(/opt/homebrew/bin/node node_modules/next/dist/bin/next build)"
+      "Bash(/opt/homebrew/bin/node node_modules/next/dist/bin/next build)",
+      "Bash(node -e ' *)",
+      "Bash(PATH=/opt/homebrew/bin:__TRACKED_VAR__ npx eslint app/teams/[id]/page.tsx lib/squads.ts)",
+      "Bash(curl -sL -w '\\\\nHTTP=%{http_code} bytes=%{size_download}\\\\n' https://raw.githubusercontent.com/upbound-web/worldcup-live.json/master/2026/worldcup.json -o /tmp/wc.json)"
     ]
   }
 }

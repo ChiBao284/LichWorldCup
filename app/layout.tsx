@@ -8,6 +8,7 @@ import {
 } from "next/font/google";
 import "./globals.css";
 import Navbar from "@/components/Navbar";
+import LiveSync from "@/components/LiveSync";
 
 // Display: Anton (Latin) + Oswald (fallback tiếng Việt — Anton thiếu glyph VN)
 const anton = Anton({
@@ -61,6 +62,7 @@ export default function RootLayout({
   return (
     <html lang="vi" className={`${fontVars} h-full antialiased`}>
       <body className="min-h-full flex flex-col font-sans pitch-bg">
+        <LiveSync />
         <Navbar />
         <main className="flex-1">{children}</main>
 
