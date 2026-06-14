@@ -15,12 +15,14 @@ function TeamSide({
 }) {
   return (
     <div
-      className={`flex flex-1 items-center gap-2 ${
+      className={`flex min-w-0 flex-1 items-center gap-2 ${
         align === "right" ? "flex-row-reverse text-right" : ""
       }`}
     >
-      <span className="text-2xl">{flag}</span>
-      <span className="truncate text-sm font-semibold sm:text-base">{name}</span>
+      <span className="shrink-0 text-2xl">{flag}</span>
+      <span className="min-w-0 truncate text-sm font-semibold sm:text-base">
+        {name}
+      </span>
     </div>
   );
 }

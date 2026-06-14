@@ -88,7 +88,9 @@ export function useUser() {
     }
     await supabaseBrowser().auth.signInWithOAuth({
       provider: "google",
-      options: { redirectTo: window.location.origin },
+      // Quay lại đúng trang đang đứng (phải nằm trong Redirect URLs allowlist
+      // ở Supabase → Auth → URL Configuration, nếu không sẽ rơi về Site URL).
+      options: { redirectTo: window.location.origin + window.location.pathname },
     });
   }, []);
 

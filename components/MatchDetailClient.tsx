@@ -6,6 +6,7 @@ import { motion } from 'motion/react';
 import { supabaseBrowser, isSupabaseConfigured } from '@/lib/supabase/client';
 import { useLiveScores } from '@/hooks/useLiveScores';
 import { StatusBadge } from '@/components/MatchCard';
+import MatchEvents from '@/components/MatchEvents';
 import PickPanel from '@/components/PickPanel';
 import DrinkSection from '@/components/DrinkSection';
 import { STAGE_LABELS } from '@/lib/types';
@@ -125,8 +126,12 @@ export default function MatchDetailClient({
                         />
                     </div>
 
-                    {/* Diễn biến bàn thắng */}
-                    {showScore &&
+                    {/* Diễn biến trận đấu */}
+                    {ls?.events?.length ? (
+                        // Trận đang diễn ra: bàn thắng + thẻ vàng/đỏ từ ESPN
+                        <MatchEvents events={ls.events} />
+                    ) : (
+                        showScore &&
                         ((match.home_goals?.length ?? 0) > 0 ||
                             (match.away_goals?.length ?? 0) > 0) && (
                             <div className="mt-7 grid grid-cols-2 gap-3 border-t border-hairline pt-5 text-sm">
@@ -139,7 +144,8 @@ export default function MatchDetailClient({
                                     align="right"
                                 />
                             </div>
-                        )}
+                        )
+                    )}
 
                     <div className="mt-7 space-y-1 text-center text-sm text-muted2">
                         <p className="capitalize">

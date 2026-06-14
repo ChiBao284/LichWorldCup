@@ -16,6 +16,7 @@ import ronaldoShadow from '@/app/assets/ronaldo_shadow.png';
 import { supabaseBrowser, isSupabaseConfigured } from '@/lib/supabase/client';
 import { useLiveScores } from '@/hooks/useLiveScores';
 import MatchCard, { StatusBadge } from '@/components/MatchCard';
+import MatchEvents from '@/components/MatchEvents';
 import PickPanel from '@/components/PickPanel';
 import Avatar from '@/components/Avatar';
 import type { LeaderboardRow, Match, Team } from '@/lib/types';
@@ -283,70 +284,83 @@ export default function HomeClient({
                                 const hs = ls ? ls.home : m.home_score;
                                 const as = ls ? ls.away : m.away_score;
                                 return (
-                                <Reveal key={m.id} delay={i * 0.1}>
-                                    <div className="grid gap-4 lg:grid-cols-2">
-                                        <Link
-                                            href={`/matches/${m.id}`}
-                                            className="glass glass-hover rounded-[22px] p-8">
-                                            <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-4">
-                                                {/* Đội nhà */}
-                                                <div className="flex flex-col items-center gap-2 text-center">
-                                                    <span className="text-[clamp(54px,9vw,96px)] leading-none">
-                                                        {m.home_team?.flag}
-                                                    </span>
-                                                    <span className="font-display uppercase text-fg text-[clamp(22px,3.4vw,40px)] leading-[0.9]">
-                                                        {m.home_team?.name}
-                                                    </span>
-                                                    <span className="font-mono text-[11px] uppercase tracking-wider text-muted2">
-                                                        {m.home_team_id ?? '?'}{' '}
-                                                        · Home
-                                                    </span>
+                                    <Reveal key={m.id} delay={i * 0.1}>
+                                        <div className="grid gap-4 lg:grid-cols-2">
+                                            <Link
+                                                href={`/matches/${m.id}`}
+                                                className="glass glass-hover flex flex-col rounded-[22px] p-8">
+                                                <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-4">
+                                                    {/* Đội nhà */}
+                                                    <div className="flex flex-col items-center gap-2 text-center">
+                                                        <span className="text-[clamp(54px,9vw,96px)] leading-none">
+                                                            {m.home_team?.flag}
+                                                        </span>
+                                                        <span className="font-display uppercase text-fg text-[clamp(22px,3.4vw,40px)] leading-[0.9]">
+                                                            {m.home_team?.name}
+                                                        </span>
+                                                        <span className="font-mono text-[11px] uppercase tracking-wider text-muted2">
+                                                            {m.home_team_id ??
+                                                                '?'}{' '}
+                                                            · Home
+                                                        </span>
+                                                    </div>
+
+                                                    {/* Giữa: live + tỉ số */}
+                                                    <div className="flex flex-col items-center gap-3">
+                                                        <StatusBadge
+                                                            match={m}
+                                                            detail={ls?.detail}
+                                                        />
+                                                        <motion.div
+                                                            key={`${hs}-${as}`}
+                                                            initial={{
+                                                                scale: 1.4,
+                                                            }}
+                                                            animate={{
+                                                                scale: 1,
+                                                            }}
+                                                            transition={{
+                                                                type: 'spring',
+                                                                stiffness: 200,
+                                                                damping: 14,
+                                                            }}
+                                                            className="font-display tabular-nums text-fg text-[clamp(48px,11vw,112px)] leading-[0.82]">
+                                                            {hs}–{as}
+                                                        </motion.div>
+                                                    </div>
+
+                                                    {/* Đội khách */}
+                                                    <div className="flex flex-col items-center gap-2 text-center">
+                                                        <span className="text-[clamp(54px,9vw,96px)] leading-none">
+                                                            {m.away_team?.flag}
+                                                        </span>
+                                                        <span className="font-display uppercase text-fg text-[clamp(22px,3.4vw,40px)] leading-[0.9]">
+                                                            {m.away_team?.name}
+                                                        </span>
+                                                        <span className="font-mono text-[11px] uppercase tracking-wider text-muted2">
+                                                            {m.away_team_id ??
+                                                                '?'}{' '}
+                                                            · Away
+                                                        </span>
+                                                    </div>
                                                 </div>
 
-                                                {/* Giữa: live + tỉ số */}
-                                                <div className="flex flex-col items-center gap-3">
-                                                    <StatusBadge
-                                                        match={m}
-                                                        detail={ls?.detail}
+                                                {m.venue && (
+                                                    <p className="mt-6 text-center font-mono text-[11px] uppercase tracking-wider text-muted2">
+                                                        {m.venue}
+                                                    </p>
+                                                )}
+
+                                                {/* Diễn biến trực tiếp: bàn thắng + thẻ */}
+                                                {ls?.events?.length ? (
+                                                    <MatchEvents
+                                                        events={ls.events}
                                                     />
-                                                    <motion.div
-                                                        key={`${hs}-${as}`}
-                                                        initial={{ scale: 1.4 }}
-                                                        animate={{ scale: 1 }}
-                                                        transition={{
-                                                            type: 'spring',
-                                                            stiffness: 200,
-                                                            damping: 14,
-                                                        }}
-                                                        className="font-display tabular-nums text-fg text-[clamp(48px,11vw,112px)] leading-[0.82]">
-                                                        {hs}–{as}
-                                                    </motion.div>
-                                                </div>
-
-                                                {/* Đội khách */}
-                                                <div className="flex flex-col items-center gap-2 text-center">
-                                                    <span className="text-[clamp(54px,9vw,96px)] leading-none">
-                                                        {m.away_team?.flag}
-                                                    </span>
-                                                    <span className="font-display uppercase text-fg text-[clamp(22px,3.4vw,40px)] leading-[0.9]">
-                                                        {m.away_team?.name}
-                                                    </span>
-                                                    <span className="font-mono text-[11px] uppercase tracking-wider text-muted2">
-                                                        {m.away_team_id ?? '?'}{' '}
-                                                        · Away
-                                                    </span>
-                                                </div>
-                                            </div>
-
-                                            {m.venue && (
-                                                <p className="mt-6 text-center font-mono text-[11px] uppercase tracking-wider text-muted2">
-                                                    {m.venue}
-                                                </p>
-                                            )}
-                                        </Link>
-                                        <PickPanel match={m} />
-                                    </div>
-                                </Reveal>
+                                                ) : null}
+                                            </Link>
+                                            <PickPanel match={m} />
+                                        </div>
+                                    </Reveal>
                                 );
                             })}
                         </div>

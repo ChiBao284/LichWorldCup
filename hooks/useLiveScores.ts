@@ -12,12 +12,28 @@ const ESPN_URL =
   "https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/scoreboard?dates=20260611-20260719";
 const REFRESH_MS = 30_000;
 
+/** Một sự kiện trong trận (bàn thắng / thẻ) lấy từ ESPN. */
+export type MatchEvent = {
+  side: "home" | "away";
+  /** Phút xảy ra, vd "23'", "45'+5'". */
+  minute: string;
+  /** Tên cầu thủ liên quan (rút gọn). */
+  player: string;
+  kind: "goal" | "yellow" | "red";
+  /** Phút từ ESPN (giây) để sắp xếp. */
+  order: number;
+  penalty: boolean;
+  ownGoal: boolean;
+};
+
 export type LiveScore = {
   home: number;
   away: number;
   /** Đồng hồ trận đấu từ ESPN, vd "67'", "HT", "FT". */
   detail: string;
   state: "pre" | "in" | "post";
+  /** Diễn biến: bàn thắng, thẻ vàng, thẻ đỏ (đã sắp xếp theo thời gian). */
+  events: MatchEvent[];
 };
 
 /* ---------- Khớp đội ESPN ↔ đội trong app ---------- */
@@ -87,7 +103,34 @@ function findEvent(events: any[], match: Match) {
     ).trim();
     const state = (status.type?.state ?? "in") as LiveScore["state"];
 
-    return { home, away, detail, state } satisfies LiveScore;
+    // Diễn biến: chỉ lấy bàn thắng + thẻ vàng/đỏ
+    const sideByTeamId: Record<string, "home" | "away"> = {};
+    if (homeComp.team?.id) sideByTeamId[String(homeComp.team.id)] = "home";
+    if (awayComp.team?.id) sideByTeamId[String(awayComp.team.id)] = "away";
+
+    const events: MatchEvent[] = [];
+    for (const det of comp.details ?? []) {
+      const side = sideByTeamId[String(det?.team?.id)];
+      if (!side) continue;
+      let kind: MatchEvent["kind"];
+      if (det.redCard) kind = "red";
+      else if (det.yellowCard) kind = "yellow";
+      else if (det.scoringPlay) kind = "goal";
+      else continue; // bỏ qua thay người, phạt góc...
+      const athlete = det.athletesInvolved?.[0] ?? {};
+      events.push({
+        side,
+        minute: String(det.clock?.displayValue ?? "").trim(),
+        player: String(athlete.shortName ?? athlete.displayName ?? "").trim(),
+        kind,
+        order: Number(det.clock?.value ?? 0),
+        penalty: !!det.penaltyKick,
+        ownGoal: !!det.ownGoal,
+      });
+    }
+    events.sort((x, y) => x.order - y.order);
+
+    return { home, away, detail, state, events } satisfies LiveScore;
   }
   return null;
 }
