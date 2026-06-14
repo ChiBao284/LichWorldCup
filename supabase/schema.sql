@@ -178,6 +178,9 @@ create policy "delete own pick" on public.picks
 
 create policy "insert own drink link" on public.drink_links
   for insert with check (auth.uid() = user_id);
+drop policy if exists "update own drink link" on public.drink_links;
+create policy "update own drink link" on public.drink_links
+  for update using (auth.uid() = user_id) with check (auth.uid() = user_id);
 create policy "delete own drink link" on public.drink_links
   for delete using (auth.uid() = user_id);
 
