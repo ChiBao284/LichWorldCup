@@ -1,93 +1,41 @@
 @import "tailwindcss";
 
-/* ===================== THEME TOKENS ===================== */
-/* Mặc định = SÁNG (:root). Thêm class .dark trên <html> để chuyển TỐI. */
+/* ============================================================
+   EDITORIAL / SPORT-BROADCAST — 1 tông giấy ấm duy nhất
+   Paper #FBFAF7 · Ink #16140F · Accent đỏ #E8351F
+   ============================================================ */
 :root {
-  --bg: #eef2f9;
-  --fg: #0f172a;
-  --muted: #475569; /* chữ phụ */
-  --muted2: #64748b; /* chữ nhạt hơn */
-  --muted3: #94a3b8; /* chữ rất nhạt */
-  --card: #ffffff; /* nền đặc: vòng avatar... */
-  --soft: rgba(15, 23, 42, 0.045); /* tint mờ trên nền sáng */
-  --soft2: rgba(15, 23, 42, 0.08);
-  --hairline: rgba(15, 23, 42, 0.1); /* viền mảnh */
-  --accent: #0a9d6e; /* xanh đọc rõ trên nền sáng (link, nhấn) */
-  --today: #0284c7; /* nhấn "hôm nay" */
-  --trophy: #b45309; /* nhấn cúp/chung kết */
-  --line: rgba(15, 23, 42, 0.18); /* đường nối nhánh đấu */
+  --bg: #fbfaf7; /* giấy ấm — nền trang */
+  --fg: #16140f; /* mực — chữ chính */
+  --muted: #46433c; /* chữ phụ đậm */
+  --muted2: #6b675e; /* caption / nhãn */
+  --muted3: #9aa0a6; /* chữ rất nhạt */
+  --card: #ffffff; /* thẻ trắng */
+  --soft: rgba(20, 18, 12, 0.04); /* tint mờ */
+  --soft2: rgba(20, 18, 12, 0.08);
+  --hairline: rgba(20, 18, 12, 0.14); /* viền mảnh editorial */
+  --hairline-soft: rgba(20, 18, 12, 0.1);
 
-  --glass-bg: rgba(255, 255, 255, 0.72);
-  --glass-border: rgba(15, 23, 42, 0.08);
-  --glass-shadow: 0 8px 30px -12px rgba(15, 23, 42, 0.18);
-  --glass-hover-border: rgba(10, 157, 110, 0.45);
-  --glass-hover-shadow: 0 16px 44px -16px rgba(10, 157, 110, 0.3);
+  --accent: #e8351f; /* ĐỎ — accent duy nhất xuyên suốt */
+  --ice: #ff8c42; /* partner gradient (đỏ→cam) */
+  --gold: #e8a33d;
+  --trophy: #b5651d;
+  --today: #1f4fe8; /* xanh dương — ngày / away */
+  --home: #0b6e4f; /* đội nhà (xanh lá) */
+  --away: #1f4fe8; /* đội khách (xanh dương) */
+  --live: #16a34a; /* chấm LIVE */
+  --line: rgba(20, 18, 12, 0.14); /* đường nối nhánh đấu */
 
-  --grad-a: #059669;
-  --grad-b: #0891b2;
-  --gradhot-a: #db2777;
-  --gradhot-b: #d97706;
-
-  --scroll-track: #e2e8f0;
-  --scroll-thumb: #cbd5e1;
-  --scroll-thumb-hover: #94a3b8;
-
-  --shimmer-base: #e9eef5;
-  --shimmer-mid: #f3f6fb;
-
-  --mesh-1: rgba(5, 150, 105, 0.1);
-  --mesh-2: rgba(8, 145, 178, 0.1);
-  --mesh-3: rgba(219, 39, 119, 0.07);
-  --grid: rgba(15, 23, 42, 0.04);
+  --scroll-track: #f0ede6;
+  --scroll-thumb: #d7d2c8;
+  --scroll-thumb-hover: #b9b3a6;
+  --shimmer-base: #efece6;
+  --shimmer-mid: #f8f6f1;
 }
 
-html.dark {
-  --bg: #04060e;
-  --fg: #e8edf7;
-  --muted: #cbd5e1;
-  --muted2: #94a3b8;
-  --muted3: #64748b;
-  --card: #0b101f;
-  --soft: rgba(255, 255, 255, 0.05);
-  --soft2: rgba(255, 255, 255, 0.1);
-  --hairline: rgba(255, 255, 255, 0.1);
-  --accent: #00ff87;
-  --today: #60efff;
-  --trophy: #ffd166;
-  --line: rgba(255, 255, 255, 0.15);
-
-  --glass-bg: rgba(255, 255, 255, 0.04);
-  --glass-border: rgba(255, 255, 255, 0.08);
-  --glass-shadow: none;
-  --glass-hover-border: rgba(0, 255, 135, 0.35);
-  --glass-hover-shadow: 0 12px 40px -12px rgba(0, 255, 135, 0.25);
-
-  --grad-a: #00ff87;
-  --grad-b: #60efff;
-  --gradhot-a: #ff2e9a;
-  --gradhot-b: #ffd166;
-
-  --scroll-track: #04060e;
-  --scroll-thumb: #1c2640;
-  --scroll-thumb-hover: #2a3a60;
-
-  --shimmer-base: #0b101f;
-  --shimmer-mid: #141d35;
-
-  --mesh-1: rgba(0, 255, 135, 0.08);
-  --mesh-2: rgba(96, 239, 255, 0.07);
-  --mesh-3: rgba(255, 46, 154, 0.06);
-  --grid: rgba(255, 255, 255, 0.025);
-}
-
-/* Map token runtime -> tiện ích Tailwind (inline = giữ var() để đổi lúc chạy) */
+/* Map token runtime -> tiện ích Tailwind */
 @theme inline {
-  --color-pitch: #04060e; /* CỐ ĐỊNH: chữ tối trên nút accent sáng */
-  --color-neon: #00ff87; /* màu accent sáng cố định cho nền/viền */
-  --color-ice: #60efff;
-  --color-hot: #ff2e9a;
-  --color-gold: #ffd166;
-
+  /* Màu — giữ tên token cũ để mọi file tự cập nhật */
   --color-bg: var(--bg);
   --color-fg: var(--fg);
   --color-muted: var(--muted);
@@ -102,135 +50,139 @@ html.dark {
   --color-trophy: var(--trophy);
   --color-line: var(--line);
 
-  --font-sans: var(--font-be-vietnam), system-ui, sans-serif;
+  /* Token "bright" cũ remap sang editorial (file chưa redesign vẫn coherent) */
+  --color-pitch: #fbfaf7; /* chữ giấy trên nút đỏ */
+  --color-neon: #e8351f; /* primary = đỏ */
+  --color-ice: var(--ice);
+  --color-hot: #e8351f;
+  --color-gold: var(--gold);
+
+  /* Token đội bóng (mới) */
+  --color-home: var(--home);
+  --color-away: var(--away);
+  --color-live: var(--live);
+
+  /* Fonts */
+  --font-display: var(--font-anton), var(--font-oswald), system-ui, sans-serif;
+  --font-sans: var(--font-archivo), var(--font-be-vietnam), system-ui, sans-serif;
+  --font-mono: var(--font-space-mono), var(--font-be-vietnam), ui-monospace, monospace;
+
+  /* Animations */
+  --animate-marquee: marquee 250s linear infinite;
   --animate-float: float 6s ease-in-out infinite;
   --animate-float-slow: float 9s ease-in-out infinite;
   --animate-spin-slow: spin 14s linear infinite;
-  --animate-marquee: marquee 40s linear infinite;
-  --animate-gradient-x: gradient-x 6s ease infinite;
-  --animate-pulse-ring: pulse-ring 1.6s cubic-bezier(0.4, 0, 0.6, 1) infinite;
   --animate-shimmer: shimmer 2.5s linear infinite;
+  --animate-wc-pulse: wc-pulse 1.2s infinite;
+  --animate-wc-float: wc-float 4s ease-in-out infinite;
+  --animate-wc-pop: wc-pop 0.4s cubic-bezier(0.2, 0.8, 0.3, 1.2) both;
+  --animate-wc-fadein: wc-fadein 0.7s ease both;
 }
 
-@keyframes float {
-  0%, 100% { transform: translateY(0) rotate(0deg); }
-  50% { transform: translateY(-18px) rotate(6deg); }
-}
-
+/* ---------- Keyframes ---------- */
 @keyframes marquee {
   from { transform: translateX(0); }
   to { transform: translateX(-50%); }
 }
-
-@keyframes gradient-x {
-  0%, 100% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
+@keyframes float {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50% { transform: translateY(-16px) rotate(4deg); }
 }
-
-@keyframes pulse-ring {
-  0% { box-shadow: 0 0 0 0 rgba(255, 46, 90, 0.55); }
-  70% { box-shadow: 0 0 0 12px rgba(255, 46, 90, 0); }
-  100% { box-shadow: 0 0 0 0 rgba(255, 46, 90, 0); }
-}
-
 @keyframes shimmer {
   from { background-position: -200% 0; }
   to { background-position: 200% 0; }
 }
+@keyframes wc-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.3; transform: scale(0.6); }
+}
+@keyframes wc-float {
+  0%, 100% { transform: translateY(0) rotate(-8deg); }
+  50% { transform: translateY(-14px) rotate(-8deg); }
+}
+@keyframes wc-pop {
+  0% { transform: scale(0); }
+  70% { transform: scale(1.18); }
+  100% { transform: scale(1); }
+}
+@keyframes wc-fadein {
+  from { opacity: 0; transform: translateY(14px); }
+  to { opacity: 1; transform: translateY(0); }
+}
 
+/* ---------- Base ---------- */
 html {
   scroll-behavior: smooth;
 }
-
 body {
   background-color: var(--bg);
   color: var(--fg);
   overflow-x: hidden;
-  transition: background-color 0.4s ease, color 0.4s ease;
 }
-
 ::selection {
   background: var(--accent);
   color: #fff;
 }
+::-webkit-scrollbar { width: 10px; height: 8px; }
+::-webkit-scrollbar-track { background: var(--scroll-track); }
+::-webkit-scrollbar-thumb { background: var(--scroll-thumb); border-radius: 8px; }
+::-webkit-scrollbar-thumb:hover { background: var(--scroll-thumb-hover); }
 
-::-webkit-scrollbar {
-  width: 10px;
-  height: 8px;
+/* ---------- Editorial utilities ----------
+   Giữ tên class cũ (.glass, .text-gradient...) để file chưa redesign không vỡ. */
+
+/* Thẻ trắng phẳng, viền mảnh, đổ bóng nhẹ (thay glassmorphism) */
+.glass {
+  background: var(--card);
+  border: 1px solid var(--hairline);
+  box-shadow: 0 1px 0 rgba(20, 18, 12, 0.02), 0 20px 44px -32px rgba(20, 18, 12, 0.4);
 }
-::-webkit-scrollbar-track {
-  background: var(--scroll-track);
+.glass-hover {
+  transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
 }
-::-webkit-scrollbar-thumb {
-  background: var(--scroll-thumb);
-  border-radius: 8px;
-}
-::-webkit-scrollbar-thumb:hover {
-  background: var(--scroll-thumb-hover);
+.glass-hover:hover {
+  transform: translateY(-3px);
+  border-color: rgba(20, 18, 12, 0.24);
+  box-shadow: 0 28px 56px -34px rgba(20, 18, 12, 0.5);
 }
 
-/* Chữ gradient nhấn — đổi màu theo theme cho dễ đọc */
+/* Nền trang: giấy phẳng + quầng ấm rất nhẹ ở trên */
+.pitch-bg {
+  background-image: radial-gradient(
+    ellipse 80% 50% at 50% -10%,
+    rgba(232, 53, 31, 0.05),
+    transparent 70%
+  );
+}
+
+/* Heading "gradient" cũ -> mực đặc; "hot" -> đỏ đặc (editorial: phẳng) */
 .text-gradient {
-  background: linear-gradient(110deg, var(--grad-a), var(--grad-b), var(--grad-a));
-  background-size: 200% auto;
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-  animation: gradient-x 6s ease infinite;
+  color: var(--fg);
 }
-
 .text-gradient-hot {
-  background: linear-gradient(110deg, var(--gradhot-a), var(--gradhot-b), var(--gradhot-a));
-  background-size: 200% auto;
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-  animation: gradient-x 6s ease infinite;
+  color: var(--accent);
 }
-
-/* Chữ viền rỗng (tiêu đề "2026") */
 .text-stroke {
   -webkit-text-stroke: 2px var(--fg);
   color: transparent;
 }
 
-/* Card kính mờ */
-.glass {
-  background: var(--glass-bg);
-  border: 1px solid var(--glass-border);
-  box-shadow: var(--glass-shadow);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
-}
-
-.glass-hover {
-  transition: border-color 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
-}
-.glass-hover:hover {
-  border-color: var(--glass-hover-border);
-  transform: translateY(-3px);
-  box-shadow: var(--glass-hover-shadow);
-}
-
-/* Nền sân vận động: lưới + quầng sáng (đổi theo theme) */
-.pitch-bg {
-  background-image:
-    radial-gradient(ellipse 60% 40% at 20% 0%, var(--mesh-1), transparent),
-    radial-gradient(ellipse 50% 40% at 80% 10%, var(--mesh-2), transparent),
-    radial-gradient(ellipse 40% 30% at 50% 100%, var(--mesh-3), transparent),
-    linear-gradient(var(--grid) 1px, transparent 1px),
-    linear-gradient(90deg, var(--grid) 1px, transparent 1px);
-  background-size: 100% 100%, 100% 100%, 100% 100%, 56px 56px, 56px 56px;
-}
-
-/* Huy hiệu LIVE nhấp nháy */
+/* Chấm LIVE nhấp nháy editorial */
 .live-dot {
-  animation: pulse-ring 1.6s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  animation: wc-pulse 1.2s infinite;
 }
 
-/* Skeleton shimmer */
+/* Skeleton shimmer tông giấy */
 .shimmer {
   background: linear-gradient(90deg, var(--shimmer-base) 25%, var(--shimmer-mid) 50%, var(--shimmer-base) 75%);
   background-size: 200% 100%;
   animation: shimmer 2.5s linear infinite;
+}
+
+/* Nhãn kỹ thuật Space Mono (tiện dùng) */
+.eyebrow {
+  font-family: var(--font-mono);
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  font-weight: 700;
 }

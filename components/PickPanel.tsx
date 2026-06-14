@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   AnimatePresence,
   motion,
@@ -10,6 +10,7 @@ import {
 import { supabaseBrowser, isSupabaseConfigured } from "@/lib/supabase/client";
 import { useUser } from "@/hooks/useUser";
 import AvatarStack from "@/components/AvatarStack";
+import MatchDrinkLinks from "@/components/MatchDrinkLinks";
 import type { Match, Pick, Team } from "@/lib/types";
 
 /** Lấy danh sách pick của một trận (kèm profile người pick). */
@@ -36,35 +37,6 @@ function Pct({ value }: { value: number }) {
   return <span className="tabular-nums">{display}%</span>;
 }
 
-/** Bắn emoji tỏa tròn khi pick. */
-const BURST = ["⚽", "🔥", "🎉", "⭐", "💥"];
-function Burst({ id }: { id: number }) {
-  return (
-    <div className="pointer-events-none absolute inset-0 z-20 flex items-center justify-center">
-      {Array.from({ length: 10 }).map((_, i) => {
-        const ang = (i / 10) * Math.PI * 2;
-        const dist = 64 + (i % 3) * 20;
-        return (
-          <motion.span
-            key={`${id}-${i}`}
-            initial={{ opacity: 1, x: 0, y: 0, scale: 0.4 }}
-            animate={{
-              opacity: 0,
-              x: Math.cos(ang) * dist,
-              y: Math.sin(ang) * dist,
-              scale: 1.4,
-            }}
-            transition={{ duration: 0.75, ease: "easeOut" }}
-            className="absolute text-xl"
-          >
-            {BURST[i % BURST.length]}
-          </motion.span>
-        );
-      })}
-    </div>
-  );
-}
-
 /**
  * Panel pick đội yêu thích cho một trận đấu.
  * Realtime: avatar mọi người + % chọn mỗi đội cập nhật trực tiếp.
@@ -73,8 +45,6 @@ export default function PickPanel({ match }: { match: Match }) {
   const { user, signInWithGoogle } = useUser();
   const [picks, setPicks] = useState<Pick[]>([]);
   const [saving, setSaving] = useState(false);
-  const [burst, setBurst] = useState<{ team: string; n: number } | null>(null);
-  const seq = useRef(0);
 
   const locked = match.status === "finished";
   const home = match.home_team;
@@ -129,7 +99,6 @@ export default function PickPanel({ match }: { match: Match }) {
       signInWithGoogle();
       return;
     }
-    setBurst({ team: teamId, n: ++seq.current });
     setSaving(true);
     await supabaseBrowser()
       .from("picks")
@@ -147,31 +116,43 @@ export default function PickPanel({ match }: { match: Match }) {
     team: Team;
     picksList: Pick[];
     pct: number;
-    grad: string;
+    pctClass: string; // màu chữ % theo đội
+    mineBorder: string; // viền + nền nhạt khi mình chọn đội này
+    barClass: string; // màu thanh kéo co
   }[] = [
-    { team: home, picksList: homePicks, pct: homePct, grad: "text-gradient" },
-    { team: away, picksList: awayPicks, pct: awayPct, grad: "text-gradient-hot" },
+    {
+      team: home,
+      picksList: homePicks,
+      pct: homePct,
+      pctClass: "text-home",
+      mineBorder: "border-home bg-home/10",
+      barClass: "bg-home",
+    },
+    {
+      team: away,
+      picksList: awayPicks,
+      pct: awayPct,
+      pctClass: "text-away",
+      mineBorder: "border-away bg-away/10",
+      barClass: "bg-away",
+    },
   ];
 
   return (
     <div className="glass relative overflow-hidden rounded-3xl p-5 sm:p-6">
       {/* Header */}
-      <div className="mb-4 flex items-center justify-between">
-        <h3 className="text-base font-extrabold sm:text-lg">
-          🔥 Bạn đứng về phe nào?
+      <div className="mb-4 flex items-end justify-between gap-3">
+        <h3 className="font-display text-2xl uppercase leading-[0.86] tracking-tight sm:text-3xl">
+          Bạn đứng về phe nào?
         </h3>
-        <span className="flex items-center gap-1.5 text-xs text-muted2">
-          <span className="relative flex h-2 w-2">
-            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-accent/60" />
-            <span className="relative inline-flex h-2 w-2 rounded-full bg-accent" />
-          </span>
+        <span className="shrink-0 font-mono text-[11px] uppercase tracking-wider text-muted2">
           {total} người
         </span>
       </div>
 
       {/* Hai đội */}
       <div className="grid grid-cols-2 gap-3 sm:gap-4">
-        {sides.map(({ team, picksList, pct, grad }) => {
+        {sides.map(({ team, picksList, pct, pctClass, mineBorder }) => {
           const isMine = myPick?.team_id === team.id;
           const isLeader = leader === team.id;
           return (
@@ -181,26 +162,11 @@ export default function PickPanel({ match }: { match: Match }) {
               disabled={locked || saving}
               whileHover={locked ? undefined : { scale: 1.03, y: -2 }}
               whileTap={locked ? undefined : { scale: 0.96 }}
-              animate={
+              transition={{ duration: 0.3 }}
+              className={`group relative overflow-hidden rounded-2xl border p-4 text-left transition-colors ${
                 isMine
-                  ? {
-                      boxShadow: [
-                        "0 0 0px 0px rgba(0,255,135,0.0)",
-                        "0 0 26px -6px rgba(0,255,135,0.55)",
-                        "0 0 0px 0px rgba(0,255,135,0.0)",
-                      ],
-                    }
-                  : { boxShadow: "0 0 0px 0px rgba(0,0,0,0)" }
-              }
-              transition={
-                isMine
-                  ? { duration: 2, repeat: Infinity, ease: "easeInOut" }
-                  : { duration: 0.3 }
-              }
-              className={`group relative overflow-hidden rounded-2xl border p-4 text-left ${
-                isMine
-                  ? "border-accent bg-accent/10"
-                  : "border-hairline bg-soft hover:border-accent/40"
+                  ? mineBorder
+                  : "border-hairline bg-card hover:border-fg/30"
               } ${locked ? "cursor-default opacity-90" : "cursor-pointer"}`}
             >
               {/* Vương miện đội đang dẫn */}
@@ -218,32 +184,29 @@ export default function PickPanel({ match }: { match: Match }) {
                 )}
               </AnimatePresence>
 
-              {/* Emoji bắn khi pick */}
-              <AnimatePresence>
-                {burst?.team === team.id && <Burst key={burst.n} id={burst.n} />}
-              </AnimatePresence>
-
-              <div className="relative mb-1 flex items-center gap-2 font-bold">
+              <div className="relative mb-1 flex items-center gap-2">
                 <motion.span
-                  className="text-3xl drop-shadow"
+                  className="text-3xl"
                   whileHover={{ scale: 1.15, rotate: -6 }}
                 >
                   {team.flag}
                 </motion.span>
-                <span className="truncate">{team.name}</span>
+                <span className="truncate font-semibold">{team.name}</span>
               </div>
 
-              <div className={`mb-2 text-4xl font-black ${grad}`}>
+              <div
+                className={`mb-2 font-display text-4xl tabular-nums leading-none ${pctClass}`}
+              >
                 <Pct value={pct} />
               </div>
 
               <div className="flex items-center justify-between gap-2">
-                <AvatarStack picks={picksList} />
+                <AvatarStack picks={picksList} youId={user?.id} />
                 {isMine && (
                   <motion.span
                     initial={{ scale: 0 }}
                     animate={{ scale: 1 }}
-                    className="shrink-0 rounded-full bg-accent px-2 py-0.5 text-[10px] font-black text-white"
+                    className="shrink-0 rounded-full bg-accent px-2 py-0.5 font-mono text-[10px] font-bold text-pitch"
                   >
                     ✓ BẠN
                   </motion.span>
@@ -256,21 +219,21 @@ export default function PickPanel({ match }: { match: Match }) {
 
       {/* Thanh kéo co với nút trượt */}
       <div className="relative mt-6 h-7">
-        <div className="absolute inset-x-0 top-1/2 flex h-4 -translate-y-1/2 overflow-hidden rounded-full bg-soft">
+        <div className="absolute inset-x-0 top-1/2 flex h-4 -translate-y-1/2 overflow-hidden rounded-full border border-hairline bg-soft">
           <motion.div
-            className="bg-gradient-to-r from-neon to-ice"
+            className="bg-home"
             animate={{ width: `${homePct}%` }}
             transition={{ type: "spring", stiffness: 120, damping: 20 }}
           />
           <motion.div
-            className="bg-gradient-to-r from-hot to-gold"
+            className="bg-away"
             animate={{ width: `${awayPct}%` }}
             transition={{ type: "spring", stiffness: 120, damping: 20 }}
           />
         </div>
         {/* Nút trượt ở ranh giới — mang cờ đội đang dẫn */}
         <motion.div
-          className="absolute top-1/2 z-10 flex h-7 w-7 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border-2 border-card bg-card text-sm shadow-lg"
+          className="absolute top-1/2 z-10 flex h-7 w-7 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border-2 border-card bg-card text-sm shadow-md"
           animate={{ left: `${homePct}%` }}
           transition={{ type: "spring", stiffness: 120, damping: 20 }}
         >
@@ -283,11 +246,11 @@ export default function PickPanel({ match }: { match: Match }) {
                 : away.flag}
         </motion.div>
       </div>
-      <div className="mt-1.5 flex justify-between text-xs text-muted2">
-        <span>
+      <div className="mt-1.5 flex justify-between font-mono text-[11px] uppercase tracking-wider">
+        <span className="text-home">
           {home.flag} {homePicks.length} người
         </span>
-        <span>
+        <span className="text-away">
           {awayPicks.length} người {away.flag}
         </span>
       </div>
@@ -301,17 +264,16 @@ export default function PickPanel({ match }: { match: Match }) {
           Bấm vào một đội để{" "}
           <button
             onClick={signInWithGoogle}
-            className="font-bold text-accent underline"
+            className="font-semibold text-accent underline underline-offset-2"
           >
             đăng nhập Google
           </button>{" "}
           và pick
         </p>
-      ) : (
-        <p className="mt-4 text-center text-xs text-muted3">
-          Bấm để đổi phe bất cứ lúc nào trước khi hết trận ⚡
-        </p>
-      )}
+      ) : null}
+
+      {/* Link nước: ai cũng dán được, bấm để mở quán & đặt nước */}
+      <MatchDrinkLinks matchId={match.id} />
     </div>
   );
 }

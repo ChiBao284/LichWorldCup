@@ -6,6 +6,7 @@ import { motion } from "motion/react";
 import { supabaseBrowser } from "@/lib/supabase/client";
 import { useUser } from "@/hooks/useUser";
 import { AVATARS } from "@/lib/avatars";
+import Avatar from "@/components/Avatar";
 
 export default function ProfilePage() {
   const router = useRouter();
@@ -61,6 +62,10 @@ export default function ProfilePage() {
     }, 900);
   }
 
+  // Ảnh đại diện Google (nếu đăng nhập bằng Gmail) — cho phép chọn lại
+  const googlePhoto: string | undefined =
+    user.user_metadata?.avatar_url || user.user_metadata?.picture;
+
   return (
     <div className="mx-auto max-w-xl px-4 py-12">
       <motion.div
@@ -82,9 +87,9 @@ export default function ProfilePage() {
             initial={{ scale: 0.5, rotate: -20 }}
             animate={{ scale: 1, rotate: 0 }}
             transition={{ type: "spring", stiffness: 300, damping: 15 }}
-            className="flex h-20 w-20 items-center justify-center rounded-full border-2 border-neon/50 bg-card text-5xl shadow-[0_0_30px_-8px_rgba(0,255,135,0.5)]"
+            className="flex h-20 w-20 items-center justify-center overflow-hidden rounded-full border-2 border-accent bg-card text-5xl shadow-sm"
           >
-            {avatar || "🙂"}
+            <Avatar value={avatar} />
           </motion.div>
           <div>
             <p className="text-xl font-black">{username || "Tên của bạn"}</p>
@@ -102,6 +107,24 @@ export default function ProfilePage() {
         />
 
         <label className="mb-2 block text-sm font-bold">Chọn avatar đại diện</label>
+
+        {/* Dùng lại ảnh Google */}
+        {googlePhoto && (
+          <button
+            onClick={() => setAvatar(googlePhoto)}
+            className={`mb-3 flex w-full items-center gap-3 rounded-xl border px-3 py-2 text-sm font-medium transition ${
+              avatar === googlePhoto
+                ? "border-accent bg-accent/10"
+                : "border-hairline hover:bg-soft"
+            }`}
+          >
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full bg-soft">
+              <Avatar value={googlePhoto} />
+            </span>
+            Dùng ảnh Google của bạn
+          </button>
+        )}
+
         <div className="mb-8 grid grid-cols-8 gap-2">
           {AVATARS.map((a) => (
             <button

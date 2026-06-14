@@ -60,9 +60,23 @@ declare
   animals text[] := array['Cáo','Gấu trúc','Hổ','Sư tử','Ếch','Bạch tuộc','Kỳ lân','Cánh cụt','Koala','Thỏ','Khủng long','Cú mèo','Cá voi','Rùa','Mèo','Bướm'];
   emojis  text[] := array['🦊','🐼','🐯','🦁','🐸','🐙','🦄','🐧','🐨','🐰','🦖','🦉','🐳','🐢','🐱','🦋'];
   i int := 1 + floor(random() * 16)::int;
+  -- Lấy tên + ảnh từ tài khoản Google (nếu đăng nhập bằng Gmail)
+  g_name text := coalesce(
+    nullif(new.raw_user_meta_data->>'full_name', ''),
+    nullif(new.raw_user_meta_data->>'name', '')
+  );
+  g_avatar text := coalesce(
+    nullif(new.raw_user_meta_data->>'avatar_url', ''),
+    nullif(new.raw_user_meta_data->>'picture', '')
+  );
 begin
+  -- Mặc định = tên & ảnh Google; nếu không có thì rơi về "ẩn danh" ngẫu nhiên
   insert into public.profiles (id, username, avatar)
-  values (new.id, animals[i] || ' ẩn danh', emojis[i])
+  values (
+    new.id,
+    coalesce(g_name, animals[i] || ' ẩn danh'),
+    coalesce(g_avatar, emojis[i])
+  )
   on conflict (id) do nothing;
   return new;
 end;

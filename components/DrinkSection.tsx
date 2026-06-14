@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import { supabaseBrowser, isSupabaseConfigured } from "@/lib/supabase/client";
 import { useUser } from "@/hooks/useUser";
+import Avatar from "@/components/Avatar";
 import type { DrinkLink, DrinkOrder, Match, Pick } from "@/lib/types";
 
 type DrinkData = {
@@ -227,8 +228,8 @@ export default function DrinkSection({ match }: { match: Match }) {
                   className="rounded-2xl border border-hairline bg-soft p-4"
                 >
                   <div className="flex items-center gap-2.5">
-                    <span className="flex h-9 w-9 items-center justify-center rounded-full bg-card text-lg">
-                      {link.profiles?.avatar ?? "🙂"}
+                    <span className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full bg-card text-lg">
+                      <Avatar value={link.profiles?.avatar} />
                     </span>
                     <div className="min-w-0 flex-1">
                       <p className="truncate text-sm">
@@ -253,7 +254,9 @@ export default function DrinkSection({ match }: { match: Match }) {
                     <ul className="mt-3 space-y-1.5 border-t border-hairline pt-3">
                       {linkOrders.map((o) => (
                         <li key={o.id} className="flex items-center gap-2 text-sm">
-                          <span>{o.profiles?.avatar ?? "🙂"}</span>
+                          <span className="flex h-5 w-5 shrink-0 items-center justify-center overflow-hidden rounded-full bg-card">
+                            <Avatar value={o.profiles?.avatar} />
+                          </span>
                           <b className="shrink-0">{o.profiles?.username ?? "Ẩn danh"}:</b>
                           <span className="truncate text-muted">{o.item}</span>
                         </li>

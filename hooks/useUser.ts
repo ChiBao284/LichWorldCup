@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import type { User } from "@supabase/supabase-js";
 import { supabaseBrowser, isSupabaseConfigured } from "@/lib/supabase/client";
+import { isAnonymousName } from "@/lib/avatars";
 import type { Profile } from "@/lib/types";
 
 /** Hook lấy user đăng nhập + profile (username, avatar). */
@@ -30,14 +31,38 @@ export function useUser() {
   useEffect(() => {
     if (!user) return;
     let cancelled = false;
-    supabaseBrowser()
-      .from("profiles")
-      .select("*")
-      .eq("id", user.id)
-      .maybeSingle()
-      .then(({ data }) => {
-        if (!cancelled) setProfile((data as Profile) ?? null);
-      });
+
+    (async () => {
+      const supabase = supabaseBrowser();
+      const { data } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("id", user.id)
+        .maybeSingle();
+      let prof = (data as Profile) ?? null;
+
+      // Backfill từ Google: nếu profile vẫn còn nguyên trạng "ẩn danh"
+      // (người dùng chưa tự đặt tên) thì lấy tên + ảnh từ tài khoản Gmail.
+      const gName: string | undefined =
+        user.user_metadata?.full_name || user.user_metadata?.name;
+      const gPhoto: string | undefined =
+        user.user_metadata?.avatar_url || user.user_metadata?.picture;
+      if (prof && isAnonymousName(prof.username) && (gName || gPhoto)) {
+        const { data: updated } = await supabase
+          .from("profiles")
+          .update({
+            username: gName || prof.username,
+            avatar: gPhoto || prof.avatar,
+          })
+          .eq("id", user.id)
+          .select()
+          .single();
+        if (updated) prof = updated as Profile;
+      }
+
+      if (!cancelled) setProfile(prof);
+    })();
+
     return () => {
       cancelled = true;
     };

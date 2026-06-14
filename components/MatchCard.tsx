@@ -18,7 +18,7 @@ function TeamSide({
         align === "right" ? "flex-row-reverse text-right" : ""
       }`}
     >
-      <span className="text-2xl drop-shadow">{flag}</span>
+      <span className="text-2xl">{flag}</span>
       <span className="truncate text-sm font-semibold sm:text-base">{name}</span>
     </div>
   );
@@ -27,21 +27,21 @@ function TeamSide({
 export function StatusBadge({ match }: { match: Match }) {
   if (match.status === "live") {
     return (
-      <span className="live-dot inline-flex items-center gap-1.5 rounded-full bg-red-500/15 px-2.5 py-0.5 text-xs font-bold text-red-400">
-        <span className="h-1.5 w-1.5 rounded-full bg-red-500" />
+      <span className="inline-flex items-center gap-1.5 rounded-full bg-accent/10 px-2.5 py-0.5 font-mono text-[11px] font-bold uppercase tracking-wider text-accent">
+        <span className="live-dot h-1.5 w-1.5 rounded-full bg-accent" />
         LIVE {match.minute ? `${match.minute}'` : ""}
       </span>
     );
   }
   if (match.status === "finished") {
     return (
-      <span className="rounded-full bg-soft px-2.5 py-0.5 text-xs font-semibold text-muted2">
+      <span className="rounded-full border border-hairline px-2.5 py-0.5 font-mono text-[11px] uppercase tracking-wider text-muted2">
         Kết thúc
       </span>
     );
   }
   return (
-    <span className="rounded-full bg-today/10 px-2.5 py-0.5 text-xs font-semibold text-today">
+    <span className="rounded-full border border-hairline px-2.5 py-0.5 font-mono text-[11px] uppercase tracking-wider text-muted2">
       {formatDate(match.kickoff_at)}
     </span>
   );
@@ -57,11 +57,11 @@ export default function MatchCard({ match }: { match: Match }) {
     <Link
       href={`/matches/${match.id}`}
       className={`glass glass-hover block rounded-2xl p-4 ${
-        match.status === "live" ? "border-red-500/30" : ""
+        match.status === "live" ? "border-accent" : ""
       }`}
     >
-      <div className="mb-3 flex items-center justify-between gap-2 text-xs text-muted2">
-        <span>
+      <div className="mb-3 flex items-center justify-between gap-2">
+        <span className="font-mono text-[11px] uppercase tracking-wider text-muted2">
           {STAGE_LABELS[match.stage]}
           {match.group_name ? ` · Bảng ${match.group_name}` : ""}
         </span>
@@ -77,14 +77,14 @@ export default function MatchCard({ match }: { match: Match }) {
         <div className="shrink-0 text-center">
           {showScore ? (
             <span
-              className={`text-xl font-black tabular-nums sm:text-2xl ${
-                match.status === "live" ? "text-gradient-hot" : ""
+              className={`font-display text-2xl tabular-nums ${
+                match.status === "live" ? "text-accent" : "text-fg"
               }`}
             >
               {match.home_score} - {match.away_score}
             </span>
           ) : (
-            <span className="text-lg font-bold text-muted tabular-nums">
+            <span className="font-mono text-base text-muted tabular-nums">
               {formatTime(match.kickoff_at)}
             </span>
           )}
@@ -97,8 +97,8 @@ export default function MatchCard({ match }: { match: Match }) {
       </div>
 
       {match.venue && (
-        <p className="mt-3 truncate text-center text-xs text-muted3">
-          📍 {match.venue}
+        <p className="mt-3 truncate text-center font-mono text-[11px] uppercase tracking-wider text-muted3">
+          {match.venue}
         </p>
       )}
     </Link>

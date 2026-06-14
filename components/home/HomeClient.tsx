@@ -13,6 +13,7 @@ import {
 import { supabaseBrowser, isSupabaseConfigured } from "@/lib/supabase/client";
 import MatchCard, { StatusBadge } from "@/components/MatchCard";
 import PickPanel from "@/components/PickPanel";
+import Avatar from "@/components/Avatar";
 import type { LeaderboardRow, Match, Team } from "@/lib/types";
 
 /* ---------- Số đếm chạy khi scroll tới ---------- */
@@ -108,218 +109,190 @@ export default function HomeClient({ matches: initial, teams, leaderboard }: Pro
     target: heroRef,
     offset: ["start start", "end start"],
   });
-  const titleY = useTransform(scrollYProgress, [0, 1], [0, -140]);
-  const titleOpacity = useTransform(scrollYProgress, [0, 0.7], [1, 0]);
-  const orbY1 = useTransform(scrollYProgress, [0, 1], [0, 220]);
-  const orbY2 = useTransform(scrollYProgress, [0, 1], [0, 120]);
-  const ballRotate = useTransform(scrollYProgress, [0, 1], [0, 360]);
+  const titleY = useTransform(scrollYProgress, [0, 1], [0, -100]);
+  const titleOpacity = useTransform(scrollYProgress, [0, 0.8], [1, 0]);
 
   return (
     <div>
       {/* ================= HERO ================= */}
       <section
         ref={heroRef}
-        className="relative flex min-h-[92vh] flex-col items-center justify-center overflow-hidden px-4"
+        className="relative flex min-h-[88vh] flex-col justify-center overflow-hidden"
       >
-        {/* Quầng sáng parallax */}
-        <motion.div
-          style={{ y: orbY1 }}
-          className="pointer-events-none absolute -left-32 top-10 h-96 w-96 rounded-full bg-neon/15 blur-[120px]"
-        />
-        <motion.div
-          style={{ y: orbY2 }}
-          className="pointer-events-none absolute -right-24 top-40 h-80 w-80 rounded-full bg-ice/15 blur-[100px]"
-        />
-        <motion.div
-          style={{ y: orbY1 }}
-          className="pointer-events-none absolute bottom-0 left-1/3 h-72 w-72 rounded-full bg-hot/10 blur-[110px]"
-        />
-
-        {/* Bóng đá bay lơ lửng */}
-        <motion.div
-          style={{ rotate: ballRotate }}
-          className="absolute right-[12%] top-[18%] text-6xl opacity-80 animate-float sm:text-8xl"
-        >
-          ⚽
-        </motion.div>
-        <div className="absolute left-[10%] top-[30%] text-4xl opacity-60 animate-float-slow">
-          🏆
-        </div>
-        <div className="absolute bottom-[28%] left-[18%] text-3xl opacity-50 animate-float">
-          🧋
-        </div>
-
         <motion.div
           style={{ y: titleY, opacity: titleOpacity }}
-          className="relative z-10 text-center"
+          className="mx-auto w-full max-w-6xl px-4"
         >
+          {/* Eyebrow */}
           <motion.p
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
-            className="mb-4 inline-block rounded-full border border-neon/30 bg-neon/10 px-4 py-1.5 text-sm font-semibold text-accent"
+            className="eyebrow text-accent"
           >
-            🇺🇸 🇨🇦 🇲🇽 · 11.06 — 19.07.2026
+            11 Jun – 19 Jul · USA · Canada · Mexico
           </motion.p>
 
+          {/* Tiêu đề khổ lớn */}
           <motion.h1
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
+            initial={{ opacity: 0, y: 24 }}
+            animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7, ease: [0.21, 0.6, 0.35, 1] }}
-            className="text-6xl font-black leading-none tracking-tighter sm:text-8xl lg:text-9xl"
+            className="mt-5 font-display uppercase text-[clamp(56px,13vw,168px)] leading-[0.95] tracking-[-0.015em]"
           >
-            <span className="text-gradient block">WORLD CUP</span>
-            <span className="text-stroke block">2026</span>
+            <span className="block text-fg">World Cup</span>
+            <span className="block">
+              <span className="text-fg">20</span>
+              <span className="text-accent">26</span>
+            </span>
           </motion.h1>
 
+          {/* Mô tả */}
           <motion.p
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3 }}
-            className="mx-auto mt-6 max-w-xl text-base text-muted sm:text-lg"
+            className="mt-6 max-w-xl text-muted text-[clamp(16px,2.2vw,21px)] leading-relaxed"
           >
-            Lịch thi đấu · Tỉ số trực tiếp · Pick đội cùng đồng nghiệp —{" "}
-            <span className="text-gradient-hot font-bold">thua thì mua nước</span> 🧋
+            Giải đấu lớn nhất lịch sử — 48 đội, 104 trận, 3 quốc gia chủ nhà. Theo
+            dõi trực tiếp, chọn phe và xem ai đoán giỏi nhất.
           </motion.p>
 
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.45 }}
-            className="mt-8 flex flex-wrap items-center justify-center gap-3"
-          >
-            <Link
-              href="/schedule"
-              className="rounded-full bg-gradient-to-r from-neon to-ice px-7 py-3 font-bold text-pitch shadow-[0_0_40px_-8px_rgba(0,255,135,0.6)] transition hover:scale-105"
-            >
-              Xem lịch đấu 📅
-            </Link>
-            <Link
-              href="#live"
-              className="glass rounded-full px-7 py-3 font-bold transition hover:scale-105 hover:border-hot/40"
-            >
-              Pick đội ngay 🔥
-            </Link>
-          </motion.div>
-
-          {/* Thống kê */}
+          {/* Lưới số liệu */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ delay: 0.6 }}
-            className="mt-12 grid grid-cols-4 gap-6 text-center"
+            transition={{ delay: 0.5 }}
+            className="relative mt-12 grid grid-cols-4 gap-px border-y border-hairline"
+            style={{ background: "var(--hairline)" }}
           >
             {[
-              { n: 48, label: "đội tuyển" },
-              { n: 104, label: "trận đấu" },
-              { n: 16, label: "thành phố" },
-              { n: 3, label: "quốc gia" },
+              { n: 48, label: "Đội tuyển" },
+              { n: 104, label: "Trận đấu" },
+              { n: 16, label: "Thành phố" },
+              { n: 3, label: "Chủ nhà" },
             ].map((s) => (
-              <div key={s.label}>
-                <div className="text-2xl font-black text-gradient sm:text-4xl">
+              <div key={s.label} className="bg-bg px-2 py-6 text-center">
+                <div className="font-display text-fg text-[clamp(34px,5vw,60px)] leading-none">
                   <Counter to={s.n} />
                 </div>
-                <div className="text-xs text-muted2 sm:text-sm">{s.label}</div>
+                <div className="eyebrow text-muted2 text-[11px] mt-2">{s.label}</div>
               </div>
             ))}
           </motion.div>
         </motion.div>
 
-        {/* Mũi tên scroll */}
-        <motion.div
-          animate={{ y: [0, 10, 0] }}
-          transition={{ repeat: Infinity, duration: 1.8 }}
-          className="absolute bottom-6 text-2xl text-muted3"
-        >
-          ↓
-        </motion.div>
+        {/* Tag LIVE NOW — chỉ hiện trên desktop */}
+        <div className="pointer-events-none absolute right-[8%] top-[22%] hidden lg:block">
+          <span className="inline-block rotate-[-8deg] rounded-xl bg-accent px-4 py-3 font-display uppercase text-pitch leading-none text-2xl animate-wc-float">
+            Live Now
+          </span>
+        </div>
       </section>
 
-      {/* ================= MARQUEE CỜ 48 ĐỘI ================= */}
-      <div className="relative border-y border-hairline bg-soft py-4">
-        <div className="flex w-max animate-marquee gap-10 px-5 text-4xl">
+      {/* ================= MARQUEE 48 ĐỘI ================= */}
+      <div className="relative overflow-hidden border-y border-hairline bg-card py-4">
+        <div className="flex w-max animate-marquee items-center gap-10 px-5">
           {[...teams, ...teams].map((t, i) => (
-            <Link
-              key={`${t.id}-${i}`}
-              href={`/teams/${t.id}`}
-              title={t.name}
-              className="transition hover:scale-125"
-            >
-              {t.flag}
-            </Link>
+            <div key={`${t.id}-${i}`} className="flex items-center gap-10">
+              <Link
+                href={`/teams/${t.id}`}
+                title={t.name}
+                className="font-display uppercase tracking-tight text-fg text-[30px] leading-none transition hover:text-accent"
+              >
+                {t.flag} {t.name}
+              </Link>
+              <span className="text-accent text-[18px]" aria-hidden>
+                ★
+              </span>
+            </div>
           ))}
         </div>
       </div>
 
       <div className="mx-auto max-w-6xl space-y-24 px-4 py-20">
-        {/* ================= ĐANG DIỄN RA ================= */}
+        {/* ================= TRẬN LIVE TÂM ĐIỂM ================= */}
         <section id="live" className="scroll-mt-20">
           <Reveal>
-            <h2 className="mb-2 flex items-center gap-3 text-3xl font-black sm:text-4xl">
-              <span className="live-dot inline-block h-3 w-3 rounded-full bg-red-500" />
-              <span className="text-gradient-hot">Đang diễn ra</span>
-            </h2>
-            <p className="mb-8 text-muted2">
-              Tỉ số cập nhật trực tiếp — pick đội của bạn trước khi hết trận!
+            <p className="eyebrow text-accent flex items-center gap-2">
+              <span className="live-dot inline-block h-2 w-2 rounded-full bg-live" />
+              Đang diễn ra
             </p>
+            <h2 className="mt-3 font-display uppercase text-fg text-[clamp(34px,6vw,68px)] leading-[0.86] tracking-tight">
+              Trận cầu tâm điểm
+            </h2>
           </Reveal>
 
           {live.length === 0 ? (
-            <Reveal>
-              <div className="glass rounded-3xl p-10 text-center text-muted2">
-                😴 Chưa có trận nào đang lăn bóng.{" "}
-                <Link href="/schedule" className="font-bold text-accent underline">
-                  Xem các trận sắp tới →
-                </Link>
+            <Reveal className="mt-8">
+              <div className="glass rounded-[22px] p-10 text-center">
+                <p className="font-display uppercase text-fg text-2xl leading-none">
+                  Chưa có trận nào đang lăn bóng
+                </p>
+                <p className="mt-3 text-muted">
+                  Trận đấu sẽ hiện ở đây ngay khi bóng lăn.{" "}
+                  <Link href="/schedule" className="font-semibold text-accent">
+                    Xem các trận sắp tới →
+                  </Link>
+                </p>
               </div>
             </Reveal>
           ) : (
-            <div className="space-y-10">
+            <div className="mt-8 space-y-10">
               {live.map((m, i) => (
                 <Reveal key={m.id} delay={i * 0.1}>
                   <div className="grid gap-4 lg:grid-cols-2">
                     <Link
                       href={`/matches/${m.id}`}
-                      className="glass glass-hover relative flex flex-col justify-center overflow-hidden rounded-3xl border-red-500/20 p-8"
+                      className="glass glass-hover rounded-[22px] p-8"
                     >
-                      <div className="absolute inset-0 bg-gradient-to-br from-red-500/10 via-transparent to-hot/10" />
-                      <div className="relative">
-                        <div className="mb-5 flex justify-center">
-                          <StatusBadge match={m} />
+                      <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-4">
+                        {/* Đội nhà */}
+                        <div className="flex flex-col items-center gap-2 text-center">
+                          <span className="text-[clamp(54px,9vw,96px)] leading-none">
+                            {m.home_team?.flag}
+                          </span>
+                          <span className="font-display uppercase text-fg text-[clamp(22px,3.4vw,40px)] leading-[0.9]">
+                            {m.home_team?.name}
+                          </span>
+                          <span className="font-mono text-[11px] uppercase tracking-wider text-muted2">
+                            {m.home_team_id ?? "?"} · Home
+                          </span>
                         </div>
-                        <div className="flex items-center justify-between gap-4">
-                          <div className="flex flex-1 flex-col items-center gap-2">
-                            <span className="text-6xl drop-shadow-lg">
-                              {m.home_team?.flag}
-                            </span>
-                            <span className="text-center font-bold">
-                              {m.home_team?.name}
-                            </span>
-                          </div>
+
+                        {/* Giữa: live + tỉ số */}
+                        <div className="flex flex-col items-center gap-3">
+                          <StatusBadge match={m} />
                           <motion.div
                             key={`${m.home_score}-${m.away_score}`}
-                            initial={{ scale: 1.6 }}
+                            initial={{ scale: 1.4 }}
                             animate={{ scale: 1 }}
                             transition={{ type: "spring", stiffness: 200, damping: 14 }}
-                            className="text-5xl font-black tabular-nums text-gradient-hot sm:text-6xl"
+                            className="font-display tabular-nums text-fg text-[clamp(48px,11vw,112px)] leading-[0.82]"
                           >
-                            {m.home_score}-{m.away_score}
+                            {m.home_score}–{m.away_score}
                           </motion.div>
-                          <div className="flex flex-1 flex-col items-center gap-2">
-                            <span className="text-6xl drop-shadow-lg">
-                              {m.away_team?.flag}
-                            </span>
-                            <span className="text-center font-bold">
-                              {m.away_team?.name}
-                            </span>
-                          </div>
                         </div>
-                        {m.venue && (
-                          <p className="mt-5 text-center text-xs text-muted2">
-                            📍 {m.venue}
-                          </p>
-                        )}
+
+                        {/* Đội khách */}
+                        <div className="flex flex-col items-center gap-2 text-center">
+                          <span className="text-[clamp(54px,9vw,96px)] leading-none">
+                            {m.away_team?.flag}
+                          </span>
+                          <span className="font-display uppercase text-fg text-[clamp(22px,3.4vw,40px)] leading-[0.9]">
+                            {m.away_team?.name}
+                          </span>
+                          <span className="font-mono text-[11px] uppercase tracking-wider text-muted2">
+                            {m.away_team_id ?? "?"} · Away
+                          </span>
+                        </div>
                       </div>
+
+                      {m.venue && (
+                        <p className="mt-6 text-center font-mono text-[11px] uppercase tracking-wider text-muted2">
+                          {m.venue}
+                        </p>
+                      )}
                     </Link>
                     <PickPanel match={m} />
                   </div>
@@ -332,16 +305,13 @@ export default function HomeClient({ matches: initial, teams, leaderboard }: Pro
         {/* ================= SẮP DIỄN RA ================= */}
         <section>
           <Reveal>
-            <div className="mb-8 flex items-end justify-between">
-              <div>
-                <h2 className="text-3xl font-black sm:text-4xl">
-                  <span className="text-gradient">Sắp diễn ra</span> ⏳
-                </h2>
-                <p className="mt-2 text-muted2">Đặt lịch hóng kèo dần đi là vừa</p>
-              </div>
+            <div className="mb-8 flex items-end justify-between gap-4">
+              <h2 className="font-display uppercase text-fg text-[clamp(34px,6vw,68px)] leading-[0.86] tracking-tight">
+                Sắp diễn ra
+              </h2>
               <Link
                 href="/schedule"
-                className="hidden text-sm font-bold text-accent hover:underline sm:block"
+                className="shrink-0 font-mono text-[12px] uppercase tracking-wider text-accent hover:underline"
               >
                 Xem tất cả →
               </Link>
@@ -360,8 +330,8 @@ export default function HomeClient({ matches: initial, teams, leaderboard }: Pro
         {finished.length > 0 && (
           <section>
             <Reveal>
-              <h2 className="mb-8 text-3xl font-black sm:text-4xl">
-                Kết quả <span className="text-gradient">gần đây</span> 📊
+              <h2 className="mb-8 font-display uppercase text-fg text-[clamp(34px,6vw,68px)] leading-[0.86] tracking-tight">
+                Kết quả gần đây
               </h2>
             </Reveal>
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -378,65 +348,60 @@ export default function HomeClient({ matches: initial, teams, leaderboard }: Pro
         <Reveal>
           <Link
             href="/bracket"
-            className="glass glass-hover relative block overflow-hidden rounded-3xl p-10 text-center"
+            className="glass glass-hover block rounded-[22px] p-10 text-center"
           >
-            <div className="absolute inset-0 bg-gradient-to-r from-neon/5 via-transparent to-ice/5" />
-            <div className="relative">
-              <div className="mb-3 text-5xl">🏆</div>
-              <h2 className="text-3xl font-black sm:text-4xl">
-                Nhánh đấu <span className="text-gradient">loại trực tiếp</span>
-              </h2>
-              <p className="mx-auto mt-3 max-w-md text-muted2">
-                32 đội · từ vòng 1/16 đến trận Chung kết tại MetLife Stadium, New York
-              </p>
-              <span className="mt-6 inline-block rounded-full border border-neon/40 px-6 py-2.5 font-bold text-accent transition group-hover:bg-neon/10">
-                Khám phá nhánh đấu →
-              </span>
-            </div>
+            <div className="text-5xl">🏆</div>
+            <h2 className="mt-4 font-display uppercase text-fg text-[clamp(34px,6vw,68px)] leading-[0.86] tracking-tight">
+              Nhánh đấu loại trực tiếp
+            </h2>
+            <p className="mx-auto mt-3 max-w-md text-muted">
+              32 đội · từ vòng 1/16 đến trận Chung kết tại MetLife Stadium, New York.
+            </p>
+            <span className="mt-6 inline-block rounded-full border border-accent px-6 py-2.5 font-mono text-[12px] uppercase tracking-wider text-accent">
+              Khám phá →
+            </span>
           </Link>
         </Reveal>
 
         {/* ================= BXH THÁNH DỰ ĐOÁN ================= */}
         <section>
           <Reveal>
-            <h2 className="mb-2 text-center text-3xl font-black sm:text-4xl">
-              🔮 Thánh dự đoán
+            <p className="eyebrow text-accent text-center">Bảng vàng dự đoán</p>
+            <h2 className="mt-3 text-center font-display uppercase text-fg text-[clamp(34px,6vw,68px)] leading-[0.86] tracking-tight">
+              Thánh dự đoán
             </h2>
-            <p className="mb-10 text-center text-muted2">
-              Ai pick trúng đội thắng nhiều nhất?
-            </p>
           </Reveal>
 
           {leaderboard.length === 0 ? (
-            <Reveal>
-              <p className="text-center text-muted3">
+            <Reveal className="mt-8">
+              <p className="text-center text-muted2">
                 Chưa có ai trên bảng — pick vài trận để lên bảng vàng nào!
               </p>
             </Reveal>
           ) : (
-            <div className="flex items-end justify-center gap-4 sm:gap-8">
+            <div className="mt-10 flex items-end justify-center gap-4 sm:gap-8">
               {[leaderboard[1], leaderboard[0], leaderboard[2]]
                 .filter(Boolean)
                 .map((row, idx) => {
                   const isFirst = row.user_id === leaderboard[0].user_id;
-                  const medal = isFirst ? "🥇" : idx === 0 ? "🥈" : "🥉";
                   return (
                     <Reveal key={row.user_id} delay={idx * 0.15} className="text-center">
                       <div
-                        className={`mx-auto flex items-center justify-center rounded-full border-2 bg-card shadow-xl ${
+                        className={`mx-auto flex items-center justify-center overflow-hidden rounded-full border bg-card ${
                           isFirst
-                            ? "h-24 w-24 border-gold text-5xl shadow-gold/20"
+                            ? "h-24 w-24 border-2 border-accent text-5xl"
                             : "h-18 w-18 border-hairline text-4xl"
                         }`}
                       >
-                        {row.avatar}
+                        <Avatar value={row.avatar} />
                       </div>
-                      <div className="mt-2 text-2xl">{medal}</div>
-                      <div className="max-w-24 truncate font-bold">{row.username}</div>
-                      <div className="text-gradient text-xl font-black">
+                      <div className="mt-3 font-semibold text-fg max-w-24 truncate mx-auto">
+                        {row.username}
+                      </div>
+                      <div className="font-display tabular-nums text-accent text-2xl leading-none">
                         {row.win_rate ?? 0}%
                       </div>
-                      <div className="text-xs text-muted3">
+                      <div className="mt-1 font-mono text-[11px] uppercase tracking-wider text-muted2">
                         {row.correct_picks}/{row.total_picks} trận
                       </div>
                     </Reveal>
@@ -448,35 +413,12 @@ export default function HomeClient({ matches: initial, teams, leaderboard }: Pro
           <Reveal className="mt-8 text-center">
             <Link
               href="/leaderboard"
-              className="inline-block font-bold text-accent hover:underline"
+              className="inline-block font-mono text-[12px] uppercase tracking-wider text-accent hover:underline"
             >
-              Xem bảng xếp hạng đầy đủ →
+              Xem BXH đầy đủ →
             </Link>
           </Reveal>
         </section>
-
-        {/* ================= CTA NƯỚC ================= */}
-        <Reveal>
-          <div className="glass relative overflow-hidden rounded-3xl p-10 text-center sm:p-14">
-            <div className="absolute inset-0 bg-gradient-to-br from-hot/10 via-transparent to-gold/10" />
-            <div className="relative">
-              <motion.div
-                animate={{ rotate: [0, -8, 8, 0] }}
-                transition={{ repeat: Infinity, duration: 2.5 }}
-                className="mb-4 inline-block text-6xl"
-              >
-                🧋
-              </motion.div>
-              <h2 className="text-3xl font-black sm:text-4xl">
-                Luật chơi: <span className="text-gradient-hot">thua là mua nước</span>
-              </h2>
-              <p className="mx-auto mt-4 max-w-lg text-muted">
-                Pick sai đội? Vào trang trận đấu nhập link quán nước, cả team sẽ
-                &quot;giúp&quot; bạn đặt món ngay lập tức 😈
-              </p>
-            </div>
-          </div>
-        </Reveal>
       </div>
     </div>
   );

@@ -6,7 +6,7 @@ import { usePathname } from "next/navigation";
 import { AnimatePresence, motion } from "motion/react";
 import { useUser } from "@/hooks/useUser";
 import { isAnonymousName } from "@/lib/avatars";
-import ThemeToggle from "@/components/ThemeToggle";
+import Avatar from "@/components/Avatar";
 
 const LINKS = [
   { href: "/", label: "Trang chủ" },
@@ -22,22 +22,27 @@ export default function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
 
   return (
-    <header className="sticky top-0 z-50 glass border-x-0 border-t-0">
-      <nav className="mx-auto flex h-14 max-w-6xl items-center gap-2 px-4">
-        <Link href="/" className="flex shrink-0 items-center gap-2 font-black">
-          <span className="text-xl animate-spin-slow inline-block">⚽</span>
-          <span className="text-gradient text-lg tracking-tight">WC26</span>
+    <header className="sticky top-0 z-50 border-b border-hairline bg-bg/80 backdrop-blur-sm">
+      <nav className="mx-auto flex h-14 max-w-6xl items-center gap-3 px-4">
+        <Link
+          href="/"
+          className="flex shrink-0 items-center gap-1 font-mono font-bold tracking-wider text-fg"
+        >
+          <span className="text-sm">WORLDCUP</span>
+          <span className="rounded bg-accent px-1.5 text-sm font-bold text-pitch">
+            26
+          </span>
         </Link>
 
-        <div className="ml-2 flex flex-1 items-center gap-1 overflow-x-auto">
+        <div className="ml-2 flex flex-1 items-center gap-4 overflow-x-auto">
           {LINKS.map((l) => (
             <Link
               key={l.href}
               href={l.href}
-              className={`whitespace-nowrap rounded-full px-3 py-1.5 text-sm font-medium transition-colors ${
+              className={`whitespace-nowrap border-b-2 pb-0.5 font-mono text-[12px] uppercase tracking-wider transition-colors ${
                 pathname === l.href
-                  ? "bg-neon/15 text-accent"
-                  : "text-muted hover:bg-soft hover:text-fg"
+                  ? "border-accent text-fg"
+                  : "border-transparent text-muted2 hover:text-fg"
               }`}
             >
               {l.label}
@@ -45,7 +50,10 @@ export default function Navbar() {
           ))}
         </div>
 
-        <ThemeToggle />
+        <span className="hidden shrink-0 items-center gap-1.5 rounded-full border border-hairline px-2.5 py-1 font-mono text-[11px] uppercase tracking-wider text-accent sm:flex">
+          <span className="live-dot inline-block h-1.5 w-1.5 rounded-full bg-live" />
+          LIVE
+        </span>
 
         <div className="relative shrink-0">
           {loading ? (
@@ -54,8 +62,8 @@ export default function Navbar() {
             <>
               <button
                 onClick={() => setMenuOpen((o) => !o)}
-                className={`flex items-center gap-2 rounded-full border border-hairline bg-soft px-2.5 py-1.5 text-sm transition hover:border-neon/40 ${
-                  isAnonymousName(profile.username) ? "ring-2 ring-hot/60" : ""
+                className={`flex items-center gap-2 rounded-full border border-hairline bg-card px-2.5 py-1.5 text-sm transition hover:border-fg/30 ${
+                  isAnonymousName(profile.username) ? "ring-2 ring-accent" : ""
                 }`}
                 title={
                   isAnonymousName(profile.username)
@@ -63,7 +71,9 @@ export default function Navbar() {
                     : profile.username
                 }
               >
-                <span className="text-lg leading-none">{profile.avatar}</span>
+                <span className="flex h-6 w-6 items-center justify-center overflow-hidden rounded-full bg-soft text-base leading-none">
+                  <Avatar value={profile.avatar} />
+                </span>
                 <span className="hidden max-w-28 truncate font-medium sm:block">
                   {profile.username}
                 </span>
@@ -75,7 +85,7 @@ export default function Navbar() {
                     animate={{ opacity: 1, y: 0, scale: 1 }}
                     exit={{ opacity: 0, y: -6, scale: 0.96 }}
                     transition={{ duration: 0.15 }}
-                    className="glass absolute right-0 mt-2 w-52 overflow-hidden rounded-2xl p-1.5 shadow-2xl"
+                    className="absolute right-0 mt-2 w-52 overflow-hidden rounded-2xl border border-hairline bg-card p-1.5 shadow-lg"
                   >
                     <Link
                       href="/profile"
@@ -100,7 +110,7 @@ export default function Navbar() {
           ) : (
             <button
               onClick={signInWithGoogle}
-              className="flex items-center gap-2 rounded-full bg-gradient-to-r from-neon to-ice px-4 py-1.5 text-sm font-bold text-pitch transition hover:opacity-90"
+              className="flex items-center gap-2 rounded-full bg-accent px-4 py-1.5 text-sm font-semibold text-pitch transition hover:opacity-90"
             >
               <svg viewBox="0 0 24 24" className="h-4 w-4" aria-hidden>
                 <path

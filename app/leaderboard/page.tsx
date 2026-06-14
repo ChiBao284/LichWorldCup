@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { fetchLeaderboard } from "@/lib/supabase/server";
 import type { LeaderboardRow } from "@/lib/types";
+import Avatar from "@/components/Avatar";
 
 export const dynamic = "force-dynamic";
 
@@ -39,8 +40,8 @@ export default async function LeaderboardPage() {
                 <span className="w-8 text-center text-lg font-black text-muted2">
                   {medal ?? i + 1}
                 </span>
-                <span className="flex h-11 w-11 items-center justify-center rounded-full border border-hairline bg-card text-2xl">
-                  {row.avatar}
+                <span className="flex h-11 w-11 items-center justify-center overflow-hidden rounded-full border border-hairline bg-card text-2xl">
+                  <Avatar value={row.avatar} />
                 </span>
                 <div className="min-w-0 flex-1">
                   <p className="truncate font-bold">{row.username}</p>
