@@ -14,6 +14,7 @@ import {
 import messiShadow from '@/app/assets/messi_shadow.png';
 import ronaldoShadow from '@/app/assets/ronaldo_shadow.png';
 import { supabaseBrowser, isSupabaseConfigured } from '@/lib/supabase/client';
+import { useLiveScores } from '@/hooks/useLiveScores';
 import MatchCard, { StatusBadge } from '@/components/MatchCard';
 import PickPanel from '@/components/PickPanel';
 import Avatar from '@/components/Avatar';
@@ -104,6 +105,8 @@ export default function HomeClient({
     }, []);
 
     const live = matches.filter((m) => m.status === 'live');
+    /* Tỉ số trực tiếp từ ESPN — chỉ cập nhật phần score cho các trận live */
+    const liveScores = useLiveScores(matches);
     const upcoming = matches
         .filter((m) => m.status === 'scheduled' && m.home_team_id)
         .slice(0, 6);
@@ -275,7 +278,11 @@ export default function HomeClient({
                         </Reveal>
                     ) : (
                         <div className="mt-8 space-y-10">
-                            {live.map((m, i) => (
+                            {live.map((m, i) => {
+                                const ls = liveScores[m.id];
+                                const hs = ls ? ls.home : m.home_score;
+                                const as = ls ? ls.away : m.away_score;
+                                return (
                                 <Reveal key={m.id} delay={i * 0.1}>
                                     <div className="grid gap-4 lg:grid-cols-2">
                                         <Link
@@ -298,9 +305,12 @@ export default function HomeClient({
 
                                                 {/* Giữa: live + tỉ số */}
                                                 <div className="flex flex-col items-center gap-3">
-                                                    <StatusBadge match={m} />
+                                                    <StatusBadge
+                                                        match={m}
+                                                        detail={ls?.detail}
+                                                    />
                                                     <motion.div
-                                                        key={`${m.home_score}-${m.away_score}`}
+                                                        key={`${hs}-${as}`}
                                                         initial={{ scale: 1.4 }}
                                                         animate={{ scale: 1 }}
                                                         transition={{
@@ -309,8 +319,7 @@ export default function HomeClient({
                                                             damping: 14,
                                                         }}
                                                         className="font-display tabular-nums text-fg text-[clamp(48px,11vw,112px)] leading-[0.82]">
-                                                        {m.home_score}–
-                                                        {m.away_score}
+                                                        {hs}–{as}
                                                     </motion.div>
                                                 </div>
 
@@ -338,7 +347,8 @@ export default function HomeClient({
                                         <PickPanel match={m} />
                                     </div>
                                 </Reveal>
-                            ))}
+                                );
+                            })}
                         </div>
                     )}
                 </section>

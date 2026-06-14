@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { Match } from "@/lib/types";
+import type { LiveScore } from "@/hooks/useLiveScores";
 import { STAGE_LABELS } from "@/lib/types";
 import { formatTime, formatDate } from "@/lib/format";
 
@@ -24,12 +25,20 @@ function TeamSide({
   );
 }
 
-export function StatusBadge({ match }: { match: Match }) {
+export function StatusBadge({
+  match,
+  detail,
+}: {
+  match: Match;
+  /** Đồng hồ trực tiếp (vd "67'", "HT") — ưu tiên hơn match.minute nếu có. */
+  detail?: string;
+}) {
   if (match.status === "live") {
+    const clock = detail ?? (match.minute ? `${match.minute}'` : "");
     return (
       <span className="inline-flex items-center gap-1.5 rounded-full bg-accent/10 px-2.5 py-0.5 font-mono text-[11px] font-bold uppercase tracking-wider text-accent">
         <span className="live-dot h-1.5 w-1.5 rounded-full bg-accent" />
-        LIVE {match.minute ? `${match.minute}'` : ""}
+        LIVE {clock}
       </span>
     );
   }
@@ -48,10 +57,19 @@ export function StatusBadge({ match }: { match: Match }) {
 }
 
 /** Card một trận đấu — dùng ở trang chủ, lịch đấu. */
-export default function MatchCard({ match }: { match: Match }) {
+export default function MatchCard({
+  match,
+  liveScore,
+}: {
+  match: Match;
+  /** Tỉ số trực tiếp từ ESPN — chỉ truyền cho trận đang live. */
+  liveScore?: LiveScore;
+}) {
   const home = match.home_team;
   const away = match.away_team;
   const showScore = match.status !== "scheduled";
+  const homeScore = liveScore ? liveScore.home : match.home_score;
+  const awayScore = liveScore ? liveScore.away : match.away_score;
 
   return (
     <Link
@@ -65,7 +83,7 @@ export default function MatchCard({ match }: { match: Match }) {
           {STAGE_LABELS[match.stage]}
           {match.group_name ? ` · Bảng ${match.group_name}` : ""}
         </span>
-        <StatusBadge match={match} />
+        <StatusBadge match={match} detail={liveScore?.detail} />
       </div>
 
       <div className="flex items-center gap-3">
@@ -81,7 +99,7 @@ export default function MatchCard({ match }: { match: Match }) {
                 match.status === "live" ? "text-accent" : "text-fg"
               }`}
             >
-              {match.home_score} - {match.away_score}
+              {homeScore} - {awayScore}
             </span>
           ) : (
             <span className="font-mono text-base text-muted tabular-nums">

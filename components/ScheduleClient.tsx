@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { motion } from "motion/react";
 import { supabaseBrowser, isSupabaseConfigured } from "@/lib/supabase/client";
+import { useLiveScores } from "@/hooks/useLiveScores";
 import MatchCard from "@/components/MatchCard";
 import { formatDate, dateKey } from "@/lib/format";
 import type { Match } from "@/lib/types";
@@ -21,6 +22,9 @@ export default function ScheduleClient({ matches: initial }: { matches: Match[] 
   const [tab, setTab] = useState<(typeof TABS)[number]["key"]>("all");
   const [group, setGroup] = useState<string | null>(null);
   const [search, setSearch] = useState("");
+
+  /* Tỉ số trực tiếp từ ESPN — chỉ cập nhật score cho các trận đang live */
+  const liveScores = useLiveScores(matches);
 
   /* Realtime cập nhật tỉ số / trạng thái */
   useEffect(() => {
@@ -148,7 +152,13 @@ export default function ScheduleClient({ matches: initial }: { matches: Match[] 
               </h2>
               <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 {dayMatches.map((m) => (
-                  <MatchCard key={m.id} match={m} />
+                  <MatchCard
+                    key={m.id}
+                    match={m}
+                    liveScore={
+                      m.status === "live" ? liveScores[m.id] : undefined
+                    }
+                  />
                 ))}
               </div>
             </section>

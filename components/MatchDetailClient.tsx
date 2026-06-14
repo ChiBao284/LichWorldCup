@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { motion } from 'motion/react';
 import { supabaseBrowser, isSupabaseConfigured } from '@/lib/supabase/client';
+import { useLiveScores } from '@/hooks/useLiveScores';
 import { StatusBadge } from '@/components/MatchCard';
 import PickPanel from '@/components/PickPanel';
 import DrinkSection from '@/components/DrinkSection';
@@ -40,9 +41,15 @@ export default function MatchDetailClient({
         };
     }, [initial.id]);
 
+    /* Tỉ số trực tiếp từ ESPN — chỉ cập nhật score khi trận đang live */
+    const liveScores = useLiveScores([match]);
+    const ls = liveScores[match.id];
+
     const home = match.home_team;
     const away = match.away_team;
     const showScore = match.status !== 'scheduled';
+    const homeScore = ls ? ls.home : match.home_score;
+    const awayScore = ls ? ls.away : match.away_score;
 
     return (
         <div className="mx-auto max-w-4xl space-y-6 px-4 py-10">
@@ -70,7 +77,7 @@ export default function MatchDetailClient({
                                 ? ` · Bảng ${match.group_name}`
                                 : ''}
                         </span>
-                        <StatusBadge match={match} />
+                        <StatusBadge match={match} detail={ls?.detail} />
                     </div>
 
                     <div className="flex items-center justify-between gap-4">
@@ -86,7 +93,7 @@ export default function MatchDetailClient({
                         <div className="text-center">
                             {showScore ? (
                                 <motion.div
-                                    key={`${match.home_score}-${match.away_score}`}
+                                    key={`${homeScore}-${awayScore}`}
                                     initial={{ scale: 1.5 }}
                                     animate={{ scale: 1 }}
                                     transition={{
@@ -99,7 +106,7 @@ export default function MatchDetailClient({
                                             ? 'text-gradient-hot'
                                             : 'text-gradient'
                                     }`}>
-                                    {match.home_score}-{match.away_score}
+                                    {homeScore}-{awayScore}
                                 </motion.div>
                             ) : (
                                 <div className="text-3xl font-black text-muted sm:text-5xl">
