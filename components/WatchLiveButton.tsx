@@ -14,7 +14,7 @@ export default function WatchLiveButton({
     size?: 'sm' | 'md';
 }) {
     const sizeClass =
-        size === 'sm' ? 'px-3 py-1 text-[8px]' : 'px-5 py-3.5 text-sm';
+        size === 'sm' ? 'px-3 py-2.5 text-[8px]' : 'px-5 py-3.5 text-sm';
     return (
         <a
             href={VTV3_LIVE_URL}
@@ -22,7 +22,7 @@ export default function WatchLiveButton({
             rel="noopener noreferrer"
             className={`inline-flex items-center justify-center gap-2 rounded-full bg-accent font-mono font-bold uppercase tracking-wider text-pitch shadow-md shadow-accent/40 ring-2 ring-accent/30 transition hover:-translate-y-0.5 hover:shadow-lg hover:shadow-accent/50 ${sizeClass} ${className}`}>
             <span className="live-dot h-1.5 w-1.5 rounded-full bg-pitch" />
-            Link trực tiếp →
+            Link xem trực tiếp →
         </a>
     );
 }
