@@ -19,6 +19,7 @@ import MatchCard, { StatusBadge } from '@/components/MatchCard';
 import MatchEvents from '@/components/MatchEvents';
 import PickPanel from '@/components/PickPanel';
 import WatchLiveButton from '@/components/WatchLiveButton';
+import DrinkDealCard from '@/components/DrinkDealCard';
 import Avatar from '@/components/Avatar';
 import { formatTime } from '@/lib/format';
 import type { GoalEvent, LeaderboardRow, Match, Team } from '@/lib/types';
@@ -326,6 +327,12 @@ export default function HomeClient({
                                                     </span>
                                                 </div>
                                             </div>
+                                            {/* Giờ vàng đặt nước — dưới đội bóng, chỉ trận sắp đá */}
+                                            {m.status === 'scheduled' && (
+                                                <DrinkDealCard
+                                                    minutesLeft={minsToKickoff}
+                                                />
+                                            )}
                                             {isLive && (
                                                 <div className="relative z-10 mt-2 flex justify-center">
                                                     <WatchLiveButton size="sm" />
