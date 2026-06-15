@@ -14,14 +14,35 @@ import {
 import messiShadow from '@/app/assets/messi_shadow.png';
 import ronaldoShadow from '@/app/assets/ronaldo_shadow.png';
 import { supabaseBrowser, isSupabaseConfigured } from '@/lib/supabase/client';
-import { useLiveScores } from '@/hooks/useLiveScores';
+import { useLiveScores, type MatchEvent } from '@/hooks/useLiveScores';
 import MatchCard, { StatusBadge } from '@/components/MatchCard';
 import MatchEvents from '@/components/MatchEvents';
 import PickPanel from '@/components/PickPanel';
 import WatchLiveButton from '@/components/WatchLiveButton';
 import Avatar from '@/components/Avatar';
 import { formatTime } from '@/lib/format';
-import type { LeaderboardRow, Match, Team } from '@/lib/types';
+import type { GoalEvent, LeaderboardRow, Match, Team } from '@/lib/types';
+
+/** Dựng diễn biến (bàn thắng) cho trận đã kết thúc từ home_goals/away_goals đã lưu. */
+function goalsToEvents(match: Match): MatchEvent[] {
+    const toEvents = (
+        goals: GoalEvent[] | null | undefined,
+        side: 'home' | 'away',
+    ): MatchEvent[] =>
+        (goals ?? []).map((g) => ({
+            side,
+            minute: `${g.minute}'`,
+            player: g.name,
+            kind: 'goal',
+            order: g.minute,
+            penalty: !!g.penalty,
+            ownGoal: !!g.owngoal,
+        }));
+    return [
+        ...toEvents(match.home_goals, 'home'),
+        ...toEvents(match.away_goals, 'away'),
+    ];
+}
 
 /* ---------- Số đếm chạy khi scroll tới ---------- */
 function Counter({ to, suffix = '' }: { to: number; suffix?: string }) {
@@ -116,19 +137,32 @@ export default function HomeClient({
     /* Tỉ số trực tiếp từ ESPN — chỉ cập nhật phần score cho các trận live */
     const liveScores = useLiveScores(matches);
 
-    /* Trận cầu tâm điểm: đang đá + sắp bắt đầu trong 30' (để đặt nước trước) */
+    /* Trận cầu tâm điểm: đang đá + sắp bắt đầu trong 30' (để đặt nước trước)
+       + trận vừa kết thúc (giữ lại thêm 30' rồi mới ẩn) */
     const SOON_MS = 30 * 60_000;
+    // Cửa sổ "đang đá" — khớp LIVE_WINDOW_MIN (120') ở app/api/sync/route.ts.
+    const LIVE_WINDOW_MS = 120 * 60_000;
+    // Giữ trận đã kết thúc ở "tâm điểm" thêm 30' (tính từ cuối cửa sổ live) rồi mới ẩn.
+    const FINISHED_GRACE_MS = 30 * 60_000;
     const featured = matches
         .filter((m) => {
             if (m.status === 'live') return true;
+            const ko = Date.parse(m.kickoff_at);
             if (m.status === 'scheduled' && m.home_team_id) {
-                const ko = Date.parse(m.kickoff_at);
                 return ko > now && ko - now <= SOON_MS;
+            }
+            if (m.status === 'finished' && m.home_team_id) {
+                // giữ tới kickoff + 150' (cửa sổ live 120' + grace 30')
+                return now < ko + LIVE_WINDOW_MS + FINISHED_GRACE_MS;
             }
             return false;
         })
         .sort((a, b) => {
-            if (a.status !== b.status) return a.status === 'live' ? -1 : 1;
+            // live → scheduled → finished; trong cùng nhóm xếp theo giờ bóng lăn.
+            const rank = (s: Match['status']) =>
+                s === 'live' ? 0 : s === 'scheduled' ? 1 : 2;
+            const r = rank(a.status) - rank(b.status);
+            if (r !== 0) return r;
             return Date.parse(a.kickoff_at) - Date.parse(b.kickoff_at);
         });
 
@@ -142,8 +176,9 @@ export default function HomeClient({
                 !featuredIds.has(m.id),
         )
         .slice(0, 6);
+    // Trận còn ở "tâm điểm" (vừa kết thúc) thì khỏi lặp lại ở mục "đã đấu".
     const finished = matches
-        .filter((m) => m.status === 'finished')
+        .filter((m) => m.status === 'finished' && !featuredIds.has(m.id))
         .slice(-6)
         .reverse();
 
@@ -192,6 +227,11 @@ export default function HomeClient({
                         const hs = ls ? ls.home : m.home_score;
                         const as = ls ? ls.away : m.away_score;
                         const isLive = m.status === 'live';
+                        // live + finished đều hiện tỉ số + badge; chỉ scheduled mới đếm ngược.
+                        const showScore = m.status !== 'scheduled';
+                        // Diễn biến trận đã kết thúc lấy từ goals đã lưu (DB).
+                        const finishedEvents =
+                            m.status === 'finished' ? goalsToEvents(m) : [];
                         const minsToKickoff = Math.max(
                             0,
                             Math.round(
@@ -226,9 +266,9 @@ export default function HomeClient({
                                                     </span>
                                                 </div>
 
-                                                {/* Giữa: live → tỉ số · sắp đá → giờ + đếm ngược */}
+                                                {/* Giữa: live/kết thúc → tỉ số · sắp đá → giờ + đếm ngược */}
                                                 <div className="flex flex-col items-center gap-3">
-                                                    {isLive ? (
+                                                    {showScore ? (
                                                         <>
                                                             <StatusBadge
                                                                 match={m}
@@ -263,10 +303,10 @@ export default function HomeClient({
                                                                     m.kickoff_at,
                                                                 )}
                                                             </div>
-                                                            <span className="font-mono text-[11px] uppercase tracking-wider text-muted2">
+                                                            <span className="font-mono text-[11px] uppercase tracking-wider text-muted2 text-center">
                                                                 Còn{' '}
                                                                 {minsToKickoff}′
-                                                                · đặt nước đi 🧋
+                                                                🧋 đặt nước đi
                                                             </span>
                                                         </>
                                                     )}
@@ -297,10 +337,14 @@ export default function HomeClient({
                                                 </p>
                                             )} */}
 
-                                            {/* Diễn biến trực tiếp: bàn thắng + thẻ */}
+                                            {/* Diễn biến: live → từ ESPN; đã kết thúc → từ goals đã lưu */}
                                             {ls?.events?.length ? (
                                                 <MatchEvents
                                                     events={ls.events}
+                                                />
+                                            ) : finishedEvents.length ? (
+                                                <MatchEvents
+                                                    events={finishedEvents}
                                                 />
                                             ) : null}
                                         </div>
