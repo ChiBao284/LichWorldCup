@@ -147,6 +147,9 @@ export default function HomeClient({
         .slice(-6)
         .reverse();
 
+    // Có trận đang đá → đưa cả section "Trận cầu tâm điểm" lên trên Hero.
+    const hasLive = featured.some((m) => m.status === 'live');
+
     /* Parallax hero */
     const heroRef = useRef<HTMLDivElement>(null);
     const { scrollYProgress } = useScroll({
@@ -156,8 +159,171 @@ export default function HomeClient({
     const titleY = useTransform(scrollYProgress, [0, 1], [0, -100]);
     const titleOpacity = useTransform(scrollYProgress, [0, 0.8], [1, 0]);
 
+    /* ================= TRẬN LIVE TÂM ĐIỂM ================= */
+    const featuredSection = (
+        <section id="live" className="scroll-mt-20">
+            <Reveal>
+                <h2 className="mt-3 font-display uppercase text-fg text-[clamp(34px,6vw,68px)] leading-[0.86] tracking-tight">
+                    Trận cầu tâm điểm
+                </h2>
+            </Reveal>
+
+            {featured.length === 0 ? (
+                <Reveal className="mt-8">
+                    <div className="glass rounded-[22px] p-10 text-center">
+                        <p className="font-display uppercase text-fg text-2xl leading-none">
+                            Chưa có trận nào đang đá hay sắp bắt đầu
+                        </p>
+                        <p className="mt-3 text-muted">
+                            Trận sẽ hiện ở đây trước giờ bóng lăn 30 phút để mọi
+                            người đặt nước trước.{' '}
+                            <Link
+                                href="/schedule"
+                                className="font-semibold text-accent">
+                                Xem các trận sắp tới →
+                            </Link>
+                        </p>
+                    </div>
+                </Reveal>
+            ) : (
+                <div className="mt-8 space-y-10">
+                    {featured.map((m, i) => {
+                        const ls = liveScores[m.id];
+                        const hs = ls ? ls.home : m.home_score;
+                        const as = ls ? ls.away : m.away_score;
+                        const isLive = m.status === 'live';
+                        const minsToKickoff = Math.max(
+                            0,
+                            Math.round(
+                                (Date.parse(m.kickoff_at) - now) / 60_000,
+                            ),
+                        );
+                        return (
+                            <Reveal key={m.id} delay={i * 0.1}>
+                                <div className="grid items-stretch gap-4 lg:grid-cols-2">
+                                    <div className="glass glass-hover relative flex h-full flex-col rounded-[22px] p-8">
+                                        {/* Link phủ toàn thẻ → bấm chỗ nào cũng vào xem chi tiết trận */}
+                                        <Link
+                                            href={`/matches/${m.id}`}
+                                            aria-label="Xem chi tiết trận đấu"
+                                            className="absolute inset-0 z-0 rounded-[22px]"
+                                        />
+
+                                        {/* Nội dung trận — căn giữa theo chiều dọc để lấp đầy chiều cao thẻ */}
+                                        <div className="flex flex-1 flex-col ">
+                                            <div className="grid grid-cols-[1fr_auto_1fr] items-start gap-6 sm:gap-10">
+                                                {/* Đội nhà */}
+                                                <div className="flex flex-col items-center gap-2 text-center">
+                                                    <span className="text-[clamp(54px,9vw,96px)] leading-none">
+                                                        {m.home_team?.flag}
+                                                    </span>
+                                                    <span className="font-display uppercase text-fg text-[clamp(15px,2.2vw,26px)] leading-[0.95]">
+                                                        {m.home_team?.name}
+                                                    </span>
+                                                    <span className="font-mono text-[11px] uppercase tracking-wider text-muted2">
+                                                        {m.home_team_id ?? '?'}{' '}
+                                                        · Home
+                                                    </span>
+                                                </div>
+
+                                                {/* Giữa: live → tỉ số · sắp đá → giờ + đếm ngược */}
+                                                <div className="flex flex-col items-center gap-3">
+                                                    {isLive ? (
+                                                        <>
+                                                            <StatusBadge
+                                                                match={m}
+                                                                detail={
+                                                                    ls?.detail
+                                                                }
+                                                            />
+                                                            <motion.div
+                                                                key={`${hs}-${as}`}
+                                                                initial={{
+                                                                    scale: 1.4,
+                                                                }}
+                                                                animate={{
+                                                                    scale: 1,
+                                                                }}
+                                                                transition={{
+                                                                    type: 'spring',
+                                                                    stiffness: 200,
+                                                                    damping: 14,
+                                                                }}
+                                                                className="font-display tabular-nums text-fg text-[clamp(38px,8vw,84px)] leading-[0.82] ">
+                                                                {hs} – {as}
+                                                            </motion.div>
+                                                        </>
+                                                    ) : (
+                                                        <>
+                                                            <span className="inline-flex items-center gap-1.5 rounded-full bg-accent/10 px-2.5 py-0.5 font-mono text-[11px] font-bold uppercase tracking-wider text-accent">
+                                                                ⏳ Sắp bắt đầu
+                                                            </span>
+                                                            <div className="font-display tabular-nums text-fg text-[clamp(30px,6vw,56px)] leading-[0.9]">
+                                                                {formatTime(
+                                                                    m.kickoff_at,
+                                                                )}
+                                                            </div>
+                                                            <span className="font-mono text-[11px] uppercase tracking-wider text-muted2">
+                                                                Còn{' '}
+                                                                {minsToKickoff}′
+                                                                · đặt nước đi 🧋
+                                                            </span>
+                                                        </>
+                                                    )}
+                                                </div>
+
+                                                {/* Đội khách */}
+                                                <div className="flex flex-col items-center gap-2 text-center">
+                                                    <span className="text-[clamp(54px,9vw,96px)] leading-none">
+                                                        {m.away_team?.flag}
+                                                    </span>
+                                                    <span className="font-display uppercase text-fg text-[clamp(15px,2.2vw,26px)] leading-[0.95]">
+                                                        {m.away_team?.name}
+                                                    </span>
+                                                    <span className="font-mono text-[11px] uppercase tracking-wider text-muted2">
+                                                        {m.away_team_id ?? '?'}{' '}
+                                                        · Away
+                                                    </span>
+                                                </div>
+                                            </div>
+                                            {isLive && (
+                                                <div className="relative z-10 mt-2 flex justify-center">
+                                                    <WatchLiveButton size="sm" />
+                                                </div>
+                                            )}
+                                            {/* {m.venue && (
+                                                <p className="mt-6 text-center font-mono text-[11px] uppercase tracking-wider text-muted2">
+                                                    {m.venue}
+                                                </p>
+                                            )} */}
+
+                                            {/* Diễn biến trực tiếp: bàn thắng + thẻ */}
+                                            {ls?.events?.length ? (
+                                                <MatchEvents
+                                                    events={ls.events}
+                                                />
+                                            ) : null}
+                                        </div>
+                                    </div>
+                                    <PickPanel match={m} />
+                                </div>
+                            </Reveal>
+                        );
+                    })}
+                </div>
+            )}
+        </section>
+    );
+
     return (
         <div>
+            {/* Có trận đang đá → đẩy "Trận cầu tâm điểm" lên trên Hero */}
+            {hasLive && (
+                <div className="mx-auto max-w-6xl px-4 py-10">
+                    {featuredSection}
+                </div>
+            )}
+
             {/* ================= HERO ================= */}
             <section
                 ref={heroRef}
@@ -281,181 +447,7 @@ export default function HomeClient({
 
             <div className="mx-auto max-w-6xl space-y-24 px-4 py-20">
                 {/* ================= TRẬN LIVE TÂM ĐIỂM ================= */}
-                <section id="live" className="scroll-mt-20">
-                    <Reveal>
-                        <h2 className="mt-3 font-display uppercase text-fg text-[clamp(34px,6vw,68px)] leading-[0.86] tracking-tight">
-                            Trận cầu tâm điểm
-                        </h2>
-                    </Reveal>
-
-                    {featured.length === 0 ? (
-                        <Reveal className="mt-8">
-                            <div className="glass rounded-[22px] p-10 text-center">
-                                <p className="font-display uppercase text-fg text-2xl leading-none">
-                                    Chưa có trận nào đang đá hay sắp bắt đầu
-                                </p>
-                                <p className="mt-3 text-muted">
-                                    Trận sẽ hiện ở đây trước giờ bóng lăn 30
-                                    phút để mọi người đặt nước trước.{' '}
-                                    <Link
-                                        href="/schedule"
-                                        className="font-semibold text-accent">
-                                        Xem các trận sắp tới →
-                                    </Link>
-                                </p>
-                            </div>
-                        </Reveal>
-                    ) : (
-                        <div className="mt-8 space-y-10">
-                            {featured.map((m, i) => {
-                                const ls = liveScores[m.id];
-                                const hs = ls ? ls.home : m.home_score;
-                                const as = ls ? ls.away : m.away_score;
-                                const isLive = m.status === 'live';
-                                const minsToKickoff = Math.max(
-                                    0,
-                                    Math.round(
-                                        (Date.parse(m.kickoff_at) - now) /
-                                            60_000,
-                                    ),
-                                );
-                                return (
-                                    <Reveal key={m.id} delay={i * 0.1}>
-                                        <div className="grid items-stretch gap-4 lg:grid-cols-2">
-                                            <div className="glass glass-hover relative flex h-full flex-col rounded-[22px] p-8">
-                                                {/* Link phủ toàn thẻ → bấm chỗ nào cũng vào xem chi tiết trận */}
-                                                <Link
-                                                    href={`/matches/${m.id}`}
-                                                    aria-label="Xem chi tiết trận đấu"
-                                                    className="absolute inset-0 z-0 rounded-[22px]"
-                                                />
-
-                                                {/* Nội dung trận — căn giữa theo chiều dọc để lấp đầy chiều cao thẻ */}
-                                                <div className="flex flex-1 flex-col ">
-                                                    <div className="grid grid-cols-[1fr_auto_1fr] items-start gap-6 sm:gap-10">
-                                                        {/* Đội nhà */}
-                                                        <div className="flex flex-col items-center gap-2 text-center">
-                                                            <span className="text-[clamp(54px,9vw,96px)] leading-none">
-                                                                {
-                                                                    m.home_team
-                                                                        ?.flag
-                                                                }
-                                                            </span>
-                                                            <span className="font-display uppercase text-fg text-[clamp(15px,2.2vw,26px)] leading-[0.95]">
-                                                                {
-                                                                    m.home_team
-                                                                        ?.name
-                                                                }
-                                                            </span>
-                                                            <span className="font-mono text-[11px] uppercase tracking-wider text-muted2">
-                                                                {m.home_team_id ??
-                                                                    '?'}{' '}
-                                                                · Home
-                                                            </span>
-                                                        </div>
-
-                                                        {/* Giữa: live → tỉ số · sắp đá → giờ + đếm ngược */}
-                                                        <div className="flex flex-col items-center gap-3">
-                                                            {isLive ? (
-                                                                <>
-                                                                    <StatusBadge
-                                                                        match={
-                                                                            m
-                                                                        }
-                                                                        detail={
-                                                                            ls?.detail
-                                                                        }
-                                                                    />
-                                                                    <motion.div
-                                                                        key={`${hs}-${as}`}
-                                                                        initial={{
-                                                                            scale: 1.4,
-                                                                        }}
-                                                                        animate={{
-                                                                            scale: 1,
-                                                                        }}
-                                                                        transition={{
-                                                                            type: 'spring',
-                                                                            stiffness: 200,
-                                                                            damping: 14,
-                                                                        }}
-                                                                        className="font-display tabular-nums text-fg text-[clamp(38px,8vw,84px)] leading-[0.82] ">
-                                                                        {hs} –{' '}
-                                                                        {as}
-                                                                    </motion.div>
-                                                                </>
-                                                            ) : (
-                                                                <>
-                                                                    <span className="inline-flex items-center gap-1.5 rounded-full bg-accent/10 px-2.5 py-0.5 font-mono text-[11px] font-bold uppercase tracking-wider text-accent">
-                                                                        ⏳ Sắp
-                                                                        bắt đầu
-                                                                    </span>
-                                                                    <div className="font-display tabular-nums text-fg text-[clamp(30px,6vw,56px)] leading-[0.9]">
-                                                                        {formatTime(
-                                                                            m.kickoff_at,
-                                                                        )}
-                                                                    </div>
-                                                                    <span className="font-mono text-[11px] uppercase tracking-wider text-muted2">
-                                                                        Còn{' '}
-                                                                        {
-                                                                            minsToKickoff
-                                                                        }
-                                                                        ′ · đặt
-                                                                        nước đi
-                                                                        🧋
-                                                                    </span>
-                                                                </>
-                                                            )}
-                                                        </div>
-
-                                                        {/* Đội khách */}
-                                                        <div className="flex flex-col items-center gap-2 text-center">
-                                                            <span className="text-[clamp(54px,9vw,96px)] leading-none">
-                                                                {
-                                                                    m.away_team
-                                                                        ?.flag
-                                                                }
-                                                            </span>
-                                                            <span className="font-display uppercase text-fg text-[clamp(15px,2.2vw,26px)] leading-[0.95]">
-                                                                {
-                                                                    m.away_team
-                                                                        ?.name
-                                                                }
-                                                            </span>
-                                                            <span className="font-mono text-[11px] uppercase tracking-wider text-muted2">
-                                                                {m.away_team_id ??
-                                                                    '?'}{' '}
-                                                                · Away
-                                                            </span>
-                                                        </div>
-                                                    </div>
-                                                    {isLive && (
-                                                        <div className="relative z-10  flex justify-center">
-                                                            <WatchLiveButton size="sm" />
-                                                        </div>
-                                                    )}
-                                                    {/* {m.venue && (
-                                                        <p className="mt-6 text-center font-mono text-[11px] uppercase tracking-wider text-muted2">
-                                                            {m.venue}
-                                                        </p>
-                                                    )} */}
-
-                                                    {/* Diễn biến trực tiếp: bàn thắng + thẻ */}
-                                                    {ls?.events?.length ? (
-                                                        <MatchEvents
-                                                            events={ls.events}
-                                                        />
-                                                    ) : null}
-                                                </div>
-                                            </div>
-                                            <PickPanel match={m} />
-                                        </div>
-                                    </Reveal>
-                                );
-                            })}
-                        </div>
-                    )}
-                </section>
+                {!hasLive && featuredSection}
 
                 {/* ================= SẮP DIỄN RA ================= */}
                 <section>
