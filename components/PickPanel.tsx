@@ -14,6 +14,11 @@ import MatchDrinkLinks from "@/components/MatchDrinkLinks";
 import PickLogModal from "@/components/PickLogModal";
 import type { Match, Pick, Team } from "@/lib/types";
 
+/** Cho pick tới 5 phút sau giờ bóng lăn, sau đó khoá. */
+const PICK_GRACE_MS = 5 * 60_000;
+/** Giới hạn delay của setTimeout (~24.8 ngày) — vượt ngưỡng này sẽ bị tràn số. */
+const MAX_TIMEOUT_MS = 2_147_483_647;
+
 /** Lấy danh sách pick của một trận (kèm profile người pick). */
 async function fetchPicks(matchId: number): Promise<Pick[]> {
   const { data } = await supabaseBrowser()
@@ -48,7 +53,25 @@ export default function PickPanel({ match }: { match: Match }) {
   const [saving, setSaving] = useState(false);
   const [showLog, setShowLog] = useState(false);
 
-  const locked = match.status === "finished";
+  // Khoá pick: trận đã kết thúc, hoặc đã quá 5 phút kể từ giờ bóng lăn.
+  const deadlineMs = useMemo(
+    () => new Date(match.kickoff_at).getTime() + PICK_GRACE_MS,
+    [match.kickoff_at]
+  );
+  // pastDeadline khởi tạo false để khớp render server (tránh hydration mismatch),
+  // rồi useEffect hẹn giờ lật khoá đúng mốc deadline theo giờ client.
+  const [pastDeadline, setPastDeadline] = useState(false);
+  useEffect(() => {
+    const remaining = deadlineMs - Date.now();
+    // Còn quá xa (vượt giới hạn setTimeout) → chưa cần hẹn giờ, panel còn mở.
+    if (remaining > MAX_TIMEOUT_MS) return;
+    // Lật qua setTimeout (kể cả khi đã quá hạn: delay 0 ⇒ chạy ở tick sau),
+    // tránh gọi setState đồng bộ ngay trong thân effect.
+    const t = setTimeout(() => setPastDeadline(true), Math.max(0, remaining));
+    return () => clearTimeout(t);
+  }, [deadlineMs]);
+
+  const locked = match.status === "finished" || pastDeadline;
   const home = match.home_team;
   const away = match.away_team;
 
@@ -292,7 +315,9 @@ export default function PickPanel({ match }: { match: Match }) {
 
       {locked ? (
         <p className="mt-4 text-center text-xs text-muted3">
-          Trận đã kết thúc — hết pick rồi nha 😉
+          {match.status === "finished"
+            ? "Trận đã kết thúc — hết pick rồi nha 😉"
+            : "Đã quá 5 phút sau giờ bóng lăn — hết giờ pick rồi nha 😉"}
         </p>
       ) : !user ? (
         <p className="mt-4 text-center text-xs text-muted2">

@@ -283,7 +283,9 @@ export default function MatchDrinkLinks({ matchId }: { matchId: number }) {
                 : editQrUrl;
             // Cập nhật ngay cho mượt, realtime sẽ đồng bộ lại sau.
             setLinks((prev) =>
-                prev.map((l) => (l.id === id ? { ...l, url, note, qr_url } : l)),
+                prev.map((l) =>
+                    l.id === id ? { ...l, url, note, qr_url } : l,
+                ),
             );
             await supabaseBrowser()
                 .from('drink_links')
@@ -464,7 +466,7 @@ export default function MatchDrinkLinks({ matchId }: { matchId: number }) {
                                                     <img
                                                         src={l.qr_url}
                                                         alt="QR chuyển khoản"
-                                                        className="h-20 w-20 shrink-0 rounded-lg bg-white object-contain p-1"
+                                                        className="h-40 w-40 shrink-0 rounded-lg bg-white object-contain p-1"
                                                     />
                                                     <span className="font-mono text-[11px] font-bold uppercase tracking-wider text-muted2">
                                                         📱 Quét QR để chuyển
