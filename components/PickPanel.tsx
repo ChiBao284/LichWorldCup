@@ -11,6 +11,7 @@ import { supabaseBrowser, isSupabaseConfigured } from "@/lib/supabase/client";
 import { useUser } from "@/hooks/useUser";
 import AvatarStack from "@/components/AvatarStack";
 import MatchDrinkLinks from "@/components/MatchDrinkLinks";
+import PickLogModal from "@/components/PickLogModal";
 import type { Match, Pick, Team } from "@/lib/types";
 
 /** Lấy danh sách pick của một trận (kèm profile người pick). */
@@ -45,6 +46,7 @@ export default function PickPanel({ match }: { match: Match }) {
   const { user, signInWithGoogle } = useUser();
   const [picks, setPicks] = useState<Pick[]>([]);
   const [saving, setSaving] = useState(false);
+  const [showLog, setShowLog] = useState(false);
 
   const locked = match.status === "finished";
   const home = match.home_team;
@@ -152,9 +154,19 @@ export default function PickPanel({ match }: { match: Match }) {
         <h3 className="font-display text-2xl uppercase leading-[0.86] tracking-tight sm:text-3xl">
           Bạn đứng về phe nào?
         </h3>
-        <span className="shrink-0 font-mono text-[11px] uppercase tracking-wider text-muted2">
-          {total} người
-        </span>
+        {total > 0 ? (
+          <button
+            onClick={() => setShowLog(true)}
+            title="Xem nhật ký pick"
+            className="shrink-0 rounded-full border border-hairline px-2.5 py-1 font-mono text-[11px] uppercase tracking-wider text-muted2 transition hover:border-accent hover:text-accent"
+          >
+            {total} người 📜
+          </button>
+        ) : (
+          <span className="shrink-0 font-mono text-[11px] uppercase tracking-wider text-muted2">
+            {total} người
+          </span>
+        )}
       </div>
 
       {/* Hai đội */}
@@ -220,7 +232,11 @@ export default function PickPanel({ match }: { match: Match }) {
               </div>
 
               <div className="flex items-center justify-between gap-2">
-                <AvatarStack picks={picksList} youId={user?.id} />
+                <AvatarStack
+                  picks={picksList}
+                  youId={user?.id}
+                  kickoffAt={match.kickoff_at}
+                />
                 {isMine && (
                   <motion.span
                     initial={{ scale: 0 }}
@@ -305,6 +321,16 @@ export default function PickPanel({ match }: { match: Match }) {
 
       {/* Link nước: ai cũng dán được, bấm để mở quán & đặt nước */}
       <MatchDrinkLinks matchId={match.id} />
+
+      {/* Nhật ký pick: thời gian + tỉ số lúc pick của mọi người */}
+      {showLog && (
+        <PickLogModal
+          match={match}
+          picks={picks}
+          youId={user?.id}
+          onClose={() => setShowLog(false)}
+        />
+      )}
     </div>
   );
 }

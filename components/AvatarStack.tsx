@@ -3,20 +3,39 @@
 import { AnimatePresence, motion } from "motion/react";
 import type { Pick } from "@/lib/types";
 import Avatar from "@/components/Avatar";
+import { formatTimeDate, matchMinuteAt } from "@/lib/format";
 
 const MAX_VISIBLE = 10;
+
+/**
+ * Tooltip cho 1 avatar: tên + thời gian pick + số phút trận tại lúc pick.
+ * Dùng thuộc tính title (nhiều dòng qua "\n") vì nút cha có overflow-hidden
+ * sẽ cắt mất tooltip tuỳ chỉnh.
+ */
+function pickTooltip(p: Pick, kickoffAt?: string): string {
+  const name = p.profiles?.username ?? "Ẩn danh";
+  const lines = [name, `🕐 ${formatTimeDate(p.created_at)}`];
+  if (kickoffAt) {
+    const min = matchMinuteAt(kickoffAt, p.created_at);
+    lines.push(min === null ? "⏱️ Pick trước trận" : `⏱️ Phút ${min}'`);
+  }
+  return lines.join("\n");
+}
 
 /**
  * Dãy avatar hình tròn của những người đã pick một đội.
  * Hiển thị tối đa 10 người, còn lại gộp thành "+N".
  * Avatar của chính người dùng (youId) được viền đỏ và đẩy lên đầu stack.
+ * Hover một avatar sẽ hiện thời gian pick + số phút trận tại lúc đó (cần kickoffAt).
  */
 export default function AvatarStack({
   picks,
   youId,
+  kickoffAt,
 }: {
   picks: Pick[];
   youId?: string;
+  kickoffAt?: string;
 }) {
   // Đưa avatar của mình lên đầu stack (z cao) nhưng KHÔNG đổi dữ liệu gốc.
   const ordered = youId
@@ -43,7 +62,7 @@ export default function AvatarStack({
               animate={{ scale: 1, rotate: 0 }}
               exit={{ scale: 0, opacity: 0 }}
               transition={{ type: "spring", stiffness: 400, damping: 22 }}
-              title={p.profiles?.username ?? "Ẩn danh"}
+              title={pickTooltip(p, kickoffAt)}
               className={`flex h-8 w-8 items-center justify-center overflow-hidden rounded-full border-2 bg-card text-base shadow-sm ${
                 isYou
                   ? "z-30 border-accent ring-2 ring-accent"

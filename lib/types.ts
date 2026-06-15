@@ -69,6 +69,7 @@ export type DrinkLink = {
   user_id: string;
   url: string;
   note: string | null;
+  qr_url: string | null; // ảnh QR chuyển khoản (tuỳ chọn), lưu ở Storage bucket 'drink-qr'
   created_at: string;
   profiles?: Profile | null;
 };

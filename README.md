@@ -23,6 +23,7 @@ pick đội yêu thích, bảng xếp hạng thánh dự đoán, và luật vui 
 2. Mở **SQL Editor**, chạy lần lượt:
    - [`supabase/schema.sql`](supabase/schema.sql) — bảng, RLS, trigger, realtime
    - [`supabase/02_worldcup_live.sql`](supabase/02_worldcup_live.sql) — thêm cột đồng bộ + xoá seed giả (DB sẽ được nạp dữ liệu THẬT qua `/api/sync`)
+   - [`supabase/05_drink_link_qr.sql`](supabase/05_drink_link_qr.sql) — cột `qr_url` + bucket Storage `drink-qr` để gắn ảnh QR chuyển khoản vào link nước (schema.sql mới đã có sẵn; chạy file này nếu DB tạo từ trước)
    - (không cần `seed.sql` nữa — lịch/đội/tỉ số lấy thật từ `worldcup.json`; cầu thủ đọc từ [`app/data/worldcup.squads.json`](app/data/worldcup.squads.json))
 3. Bật đăng nhập Google: **Authentication → Providers → Google**
    - Tạo OAuth Client tại [Google Cloud Console](https://console.cloud.google.com/apis/credentials) (loại Web).

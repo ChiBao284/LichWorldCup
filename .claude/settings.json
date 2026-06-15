@@ -14,7 +14,10 @@
       "Bash(PATH=/opt/homebrew/bin:__TRACKED_VAR__ npx eslint app/teams/[id]/page.tsx lib/squads.ts)",
       "Bash(curl -sL -w '\\\\nHTTP=%{http_code} bytes=%{size_download}\\\\n' https://raw.githubusercontent.com/upbound-web/worldcup-live.json/master/2026/worldcup.json -o /tmp/wc.json)",
       "mcp__gitnexus__impact",
-      "Bash(node -e \"require.resolve\\('sharp'\\); console.log\\('sharp available'\\)\")"
+      "Bash(node -e \"require.resolve\\('sharp'\\); console.log\\('sharp available'\\)\")",
+      "Bash(echo \"TSC EXIT: $?\")",
+      "Bash(npx eslint *)",
+      "Bash(echo \"ESLINT EXIT: $?\")"
     ]
   }
 }

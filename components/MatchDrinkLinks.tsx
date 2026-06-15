@@ -1,11 +1,14 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 import { supabaseBrowser, isSupabaseConfigured } from '@/lib/supabase/client';
 import { useUser } from '@/hooks/useUser';
 import Avatar from '@/components/Avatar';
 import type { DrinkLink } from '@/lib/types';
+
+/** Bucket Storage chứa ảnh QR chuyển khoản (xem supabase/05_drink_link_qr.sql). */
+const QR_BUCKET = 'drink-qr';
 
 /** Lấy danh sách link nước của một trận (kèm người gắn). */
 async function fetchLinks(matchId: number): Promise<DrinkLink[]> {
@@ -27,6 +30,133 @@ function hostOf(url: string): string {
 }
 
 /**
+ * Thu nhỏ ảnh QR về tối đa 800px cạnh dài rồi xuất PNG (giữ nét các ô QR,
+ * file nhẹ ~vài chục KB). Trả về Blob để upload.
+ */
+async function compressQr(file: File): Promise<Blob> {
+    const dataUrl = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result as string);
+        reader.onerror = () => reject(reader.error);
+        reader.readAsDataURL(file);
+    });
+    const img = await new Promise<HTMLImageElement>((resolve, reject) => {
+        const im = new Image();
+        im.onload = () => resolve(im);
+        im.onerror = () => reject(new Error('Không đọc được ảnh'));
+        im.src = dataUrl;
+    });
+    const MAX = 800;
+    const scale = Math.min(1, MAX / Math.max(img.width, img.height));
+    const w = Math.max(1, Math.round(img.width * scale));
+    const h = Math.max(1, Math.round(img.height * scale));
+    const canvas = document.createElement('canvas');
+    canvas.width = w;
+    canvas.height = h;
+    canvas.getContext('2d')!.drawImage(img, 0, 0, w, h);
+    return new Promise<Blob>((resolve, reject) =>
+        canvas.toBlob(
+            (b) => (b ? resolve(b) : reject(new Error('Nén ảnh thất bại'))),
+            'image/png',
+        ),
+    );
+}
+
+/** Upload ảnh QR vào Storage, trả về public URL. */
+async function uploadQr(file: File, userId: string): Promise<string> {
+    const blob = await compressQr(file);
+    const path = `${userId}/${crypto.randomUUID()}.png`;
+    const sb = supabaseBrowser();
+    const { error } = await sb.storage
+        .from(QR_BUCKET)
+        .upload(path, blob, { contentType: 'image/png', upsert: false });
+    if (error) throw error;
+    return sb.storage.from(QR_BUCKET).getPublicUrl(path).data.publicUrl;
+}
+
+/** Lấy path trong bucket từ public URL (để xoá ảnh cũ khi thay/xoá link). */
+function qrPathFromUrl(url: string | null | undefined): string | null {
+    if (!url) return null;
+    const marker = `/${QR_BUCKET}/`;
+    const i = url.indexOf(marker);
+    return i === -1 ? null : url.slice(i + marker.length);
+}
+
+/** Xoá ảnh QR khỏi Storage (best-effort, bỏ qua lỗi). */
+async function deleteQr(url: string | null | undefined): Promise<void> {
+    const path = qrPathFromUrl(url);
+    if (!path) return;
+    await supabaseBrowser().storage.from(QR_BUCKET).remove([path]);
+}
+
+/**
+ * Ô chọn ảnh QR dùng chung cho cả form thêm mới & form sửa.
+ * Hiển thị preview + nút đổi/xoá, hoặc nút "thêm ảnh" khi chưa có.
+ */
+function QrField({
+    previewSrc,
+    onPick,
+    onClear,
+    disabled,
+}: {
+    previewSrc: string | null;
+    onPick: (file: File) => void;
+    onClear: () => void;
+    disabled?: boolean;
+}) {
+    const inputRef = useRef<HTMLInputElement>(null);
+    return (
+        <div>
+            <input
+                ref={inputRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={(e) => {
+                    const f = e.target.files?.[0];
+                    if (f) onPick(f);
+                    e.target.value = ''; // cho phép chọn lại cùng một file
+                }}
+            />
+            {previewSrc ? (
+                <div className="flex items-center gap-3 rounded-xl border border-hairline bg-card p-2">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                        src={previewSrc}
+                        alt="QR chuyển khoản"
+                        className="h-16 w-16 shrink-0 rounded-lg bg-white object-contain p-1"
+                    />
+                    <div className="flex flex-1 flex-col gap-1.5">
+                        <button
+                            type="button"
+                            disabled={disabled}
+                            onClick={() => inputRef.current?.click()}
+                            className="rounded-lg border border-hairline px-2.5 py-1 font-mono text-[11px] font-bold uppercase tracking-wider text-muted2 transition hover:text-fg disabled:opacity-50">
+                            Đổi ảnh
+                        </button>
+                        <button
+                            type="button"
+                            disabled={disabled}
+                            onClick={onClear}
+                            className="rounded-lg px-2.5 py-1 font-mono text-[11px] font-bold uppercase tracking-wider text-muted2 transition hover:text-live disabled:opacity-50">
+                            Xoá ảnh
+                        </button>
+                    </div>
+                </div>
+            ) : (
+                <button
+                    type="button"
+                    disabled={disabled}
+                    onClick={() => inputRef.current?.click()}
+                    className="flex w-full items-center justify-center gap-1.5 rounded-xl border border-dashed border-hairline py-2 font-mono text-[11px] font-bold uppercase tracking-wider text-muted2 transition hover:border-accent hover:text-accent disabled:opacity-50">
+                    📷 Thêm ảnh QR chuyển khoản (không bắt buộc)
+                </button>
+            )}
+        </div>
+    );
+}
+
+/**
  * Khu link nước nằm trong panel pick:
  * mọi người dán link quán nước (kèm chú thích), người khác bấm để mở/đặt.
  * Chủ link có thể tự sửa / xoá link của mình. Realtime.
@@ -36,6 +166,7 @@ export default function MatchDrinkLinks({ matchId }: { matchId: number }) {
     const [links, setLinks] = useState<DrinkLink[]>([]);
     const [url, setUrl] = useState('');
     const [note, setNote] = useState('');
+    const [qrFile, setQrFile] = useState<File | null>(null);
     const [busy, setBusy] = useState(false);
     const [showForm, setShowForm] = useState(false);
 
@@ -43,6 +174,31 @@ export default function MatchDrinkLinks({ matchId }: { matchId: number }) {
     const [editingId, setEditingId] = useState<number | null>(null);
     const [editUrl, setEditUrl] = useState('');
     const [editNote, setEditNote] = useState('');
+    const [editQrFile, setEditQrFile] = useState<File | null>(null); // ảnh QR mới chọn
+    const [editQrUrl, setEditQrUrl] = useState<string | null>(null); // ảnh QR hiện có (null = đã xoá)
+
+    // Preview ảnh QR (object URL của file đang chọn). Nhớ thu hồi để khỏi rò bộ nhớ.
+    const qrPreview = useMemo(
+        () => (qrFile ? URL.createObjectURL(qrFile) : null),
+        [qrFile],
+    );
+    useEffect(() => {
+        return () => {
+            if (qrPreview) URL.revokeObjectURL(qrPreview);
+        };
+    }, [qrPreview]);
+
+    const editQrNewPreview = useMemo(
+        () => (editQrFile ? URL.createObjectURL(editQrFile) : null),
+        [editQrFile],
+    );
+    useEffect(() => {
+        return () => {
+            if (editQrNewPreview) URL.revokeObjectURL(editQrNewPreview);
+        };
+    }, [editQrNewPreview]);
+    // Form sửa hiển thị: ảnh mới chọn (nếu có) > ảnh hiện tại.
+    const editQrPreview = editQrNewPreview ?? editQrUrl;
 
     useEffect(() => {
         if (!isSupabaseConfigured()) return;
@@ -75,55 +231,85 @@ export default function MatchDrinkLinks({ matchId }: { matchId: number }) {
         }
         if (!url.trim() || busy) return;
         setBusy(true);
-        await supabaseBrowser()
-            .from('drink_links')
-            .insert({
-                match_id: matchId,
-                user_id: user.id,
-                url: url.trim(),
-                note: note.trim() || null,
-            });
-        setUrl('');
-        setNote('');
-        setShowForm(false); // gắn xong thì thu form lại
-        setBusy(false);
+        try {
+            const qr_url = qrFile ? await uploadQr(qrFile, user.id) : null;
+            await supabaseBrowser()
+                .from('drink_links')
+                .insert({
+                    match_id: matchId,
+                    user_id: user.id,
+                    url: url.trim(),
+                    note: note.trim() || null,
+                    qr_url,
+                });
+            setUrl('');
+            setNote('');
+            setQrFile(null);
+            setShowForm(false); // gắn xong thì thu form lại
+        } catch (err) {
+            console.error(err);
+            alert('Tải ảnh QR thất bại, thử lại nhé.');
+        } finally {
+            setBusy(false);
+        }
     }
 
     function startEdit(l: DrinkLink) {
         setEditingId(l.id);
         setEditUrl(l.url);
         setEditNote(l.note ?? '');
+        setEditQrFile(null);
+        setEditQrUrl(l.qr_url ?? null);
     }
 
     function cancelEdit() {
         setEditingId(null);
         setEditUrl('');
         setEditNote('');
+        setEditQrFile(null);
+        setEditQrUrl(null);
     }
 
     async function saveEdit(id: number) {
-        if (!editUrl.trim() || busy) return;
+        if (!user || !editUrl.trim() || busy) return;
         setBusy(true);
-        const url = editUrl.trim();
-        const note = editNote.trim() || null;
-        // Cập nhật ngay cho mượt, realtime sẽ đồng bộ lại sau.
-        setLinks((prev) =>
-            prev.map((l) => (l.id === id ? { ...l, url, note } : l)),
-        );
-        await supabaseBrowser()
-            .from('drink_links')
-            .update({ url, note })
-            .eq('id', id);
-        cancelEdit();
-        setBusy(false);
+        try {
+            const url = editUrl.trim();
+            const note = editNote.trim() || null;
+            const original = links.find((l) => l.id === id);
+            // Ảnh mới chọn > giữ ảnh hiện tại (editQrUrl đã =null nếu người dùng xoá).
+            const qr_url = editQrFile
+                ? await uploadQr(editQrFile, user.id)
+                : editQrUrl;
+            // Cập nhật ngay cho mượt, realtime sẽ đồng bộ lại sau.
+            setLinks((prev) =>
+                prev.map((l) => (l.id === id ? { ...l, url, note, qr_url } : l)),
+            );
+            await supabaseBrowser()
+                .from('drink_links')
+                .update({ url, note, qr_url })
+                .eq('id', id);
+            // Dọn ảnh cũ trên Storage nếu đã thay hoặc đã xoá.
+            if (original?.qr_url && original.qr_url !== qr_url) {
+                await deleteQr(original.qr_url);
+            }
+            cancelEdit();
+        } catch (err) {
+            console.error(err);
+            alert('Lưu thất bại, thử lại nhé.');
+        } finally {
+            setBusy(false);
+        }
     }
 
     async function remove(id: number) {
         if (busy) return;
         if (!confirm('Xoá link nước này?')) return;
         setBusy(true);
+        const original = links.find((l) => l.id === id);
         setLinks((prev) => prev.filter((l) => l.id !== id));
         await supabaseBrowser().from('drink_links').delete().eq('id', id);
+        if (original?.qr_url) await deleteQr(original.qr_url); // dọn ảnh QR kèm theo
         if (editingId === id) cancelEdit();
         setBusy(false);
     }
@@ -182,6 +368,15 @@ export default function MatchDrinkLinks({ matchId }: { matchId: number }) {
                                                 maxLength={120}
                                                 placeholder="Chú thích (không bắt buộc)"
                                                 className={inputClass}
+                                            />
+                                            <QrField
+                                                previewSrc={editQrPreview}
+                                                onPick={setEditQrFile}
+                                                onClear={() => {
+                                                    setEditQrFile(null);
+                                                    setEditQrUrl(null);
+                                                }}
+                                                disabled={busy}
                                             />
                                             <div className="flex gap-2">
                                                 <button
@@ -258,6 +453,29 @@ export default function MatchDrinkLinks({ matchId }: { matchId: number }) {
                                                 </p>
                                             )}
 
+                                            {/* QR chuyển khoản — bấm để xem lớn */}
+                                            {l.qr_url && (
+                                                <a
+                                                    href={l.qr_url}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    className="mt-2.5 flex items-center gap-2.5 rounded-xl border border-hairline bg-card/60 p-2 transition hover:border-accent">
+                                                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                                                    <img
+                                                        src={l.qr_url}
+                                                        alt="QR chuyển khoản"
+                                                        className="h-20 w-20 shrink-0 rounded-lg bg-white object-contain p-1"
+                                                    />
+                                                    <span className="font-mono text-[11px] font-bold uppercase tracking-wider text-muted2">
+                                                        📱 Quét QR để chuyển
+                                                        khoản
+                                                        <span className="mt-0.5 block font-normal normal-case text-muted3">
+                                                            Bấm để xem ảnh lớn
+                                                        </span>
+                                                    </span>
+                                                </a>
+                                            )}
+
                                             {/* Nút đặt nước — highlight */}
                                             <a
                                                 href={l.url}
@@ -308,6 +526,12 @@ export default function MatchDrinkLinks({ matchId }: { matchId: number }) {
                                 placeholder="Chú thích (vd: trà sữa size L, ship nhanh...)"
                                 className={inputClass}
                             />
+                            <QrField
+                                previewSrc={qrPreview}
+                                onPick={setQrFile}
+                                onClear={() => setQrFile(null)}
+                                disabled={busy}
+                            />
                             <div className="flex gap-2">
                                 <button
                                     type="submit"
@@ -322,6 +546,7 @@ export default function MatchDrinkLinks({ matchId }: { matchId: number }) {
                                             setShowForm(false);
                                             setUrl('');
                                             setNote('');
+                                            setQrFile(null);
                                         }}
                                         className="rounded-xl border border-hairline px-3 py-2.5 font-mono text-xs font-bold uppercase tracking-wider text-muted2 transition hover:text-fg">
                                         Huỷ

@@ -107,6 +107,7 @@ create table public.drink_links (
   user_id uuid not null references public.profiles(id) on delete cascade,
   url text not null,
   note text,
+  qr_url text,                      -- ảnh QR chuyển khoản (tuỳ chọn), ở bucket 'drink-qr'
   created_at timestamptz not null default now()
 );
 create index drink_links_match_idx on public.drink_links(match_id);
@@ -194,3 +195,38 @@ alter publication supabase_realtime add table public.matches;
 alter publication supabase_realtime add table public.picks;
 alter publication supabase_realtime add table public.drink_links;
 alter publication supabase_realtime add table public.drink_orders;
+
+-- ---------- STORAGE: ẢNH QR LINK NƯỚC ----------
+-- Bucket công khai chứa ảnh QR chuyển khoản đính kèm link nước.
+-- Đường dẫn file: {user_id}/{uuid}.png → chủ sở hữu mới được ghi/sửa/xoá.
+insert into storage.buckets (id, name, public)
+values ('drink-qr', 'drink-qr', true)
+on conflict (id) do nothing;
+
+create policy "drink-qr public read" on storage.objects
+  for select using (bucket_id = 'drink-qr');
+
+create policy "drink-qr owner insert" on storage.objects
+  for insert to authenticated
+  with check (
+    bucket_id = 'drink-qr'
+    and (storage.foldername(name))[1] = auth.uid()::text
+  );
+
+create policy "drink-qr owner update" on storage.objects
+  for update to authenticated
+  using (
+    bucket_id = 'drink-qr'
+    and (storage.foldername(name))[1] = auth.uid()::text
+  )
+  with check (
+    bucket_id = 'drink-qr'
+    and (storage.foldername(name))[1] = auth.uid()::text
+  );
+
+create policy "drink-qr owner delete" on storage.objects
+  for delete to authenticated
+  using (
+    bucket_id = 'drink-qr'
+    and (storage.foldername(name))[1] = auth.uid()::text
+  );
