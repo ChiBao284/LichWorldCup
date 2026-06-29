@@ -3,6 +3,7 @@ import type { Match } from "@/lib/types";
 import type { LiveScore } from "@/hooks/useLiveScores";
 import { STAGE_LABELS } from "@/lib/types";
 import { formatTime, formatDate } from "@/lib/format";
+import FlagImg from "@/components/FlagImg";
 
 function TeamSide({
   name,
@@ -19,7 +20,7 @@ function TeamSide({
         align === "right" ? "flex-row-reverse text-right" : ""
       }`}
     >
-      <span className="shrink-0 text-2xl">{flag}</span>
+      <FlagImg emoji={flag} className="shrink-0 h-6 w-auto object-contain" />
       <span className="min-w-0 truncate text-sm font-semibold sm:text-base">
         {name}
       </span>

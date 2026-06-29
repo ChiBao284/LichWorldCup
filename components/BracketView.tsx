@@ -4,6 +4,7 @@ import Link from "next/link";
 import { motion } from "motion/react";
 import type { Match } from "@/lib/types";
 import { formatTime, formatDate, dateKey } from "@/lib/format";
+import FlagImg from "@/components/FlagImg";
 
 /* Chiều cao phần thân bracket — mọi cột & line đều tính % theo chiều cao này */
 const BODY = "h-[760px]";
@@ -77,7 +78,7 @@ function Row({
         winner ? "font-extrabold text-accent" : score !== null && !winner ? "text-muted2" : ""
       }`}
     >
-      <span className="text-sm">{flag ?? "🏳️"}</span>
+      <FlagImg emoji={flag ?? "🏳️"} className="h-4 w-auto object-contain shrink-0" />
       <span className="flex-1 truncate">{name}</span>
       {score !== null && <span className="tabular-nums font-bold">{score}</span>}
     </div>

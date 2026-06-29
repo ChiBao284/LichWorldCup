@@ -21,6 +21,7 @@ import PickPanel from '@/components/PickPanel';
 import WatchLiveButton from '@/components/WatchLiveButton';
 import DrinkDealCard from '@/components/DrinkDealCard';
 import Avatar from '@/components/Avatar';
+import FlagImg from '@/components/FlagImg';
 import { formatTime } from '@/lib/format';
 import type { GoalEvent, LeaderboardRow, Match, Team } from '@/lib/types';
 
@@ -255,9 +256,10 @@ export default function HomeClient({
                                             <div className="grid grid-cols-[1fr_auto_1fr] items-start gap-6 sm:gap-10">
                                                 {/* Đội nhà */}
                                                 <div className="flex flex-col items-center gap-2 text-center">
-                                                    <span className="text-[clamp(54px,9vw,96px)] leading-none">
-                                                        {m.home_team?.flag}
-                                                    </span>
+                                                    <FlagImg
+                                                        emoji={m.home_team?.flag ?? ''}
+                                                        className="h-[clamp(54px,9vw,96px)] w-auto object-contain"
+                                                    />
                                                     <span className="font-display uppercase text-fg text-[clamp(15px,2.2vw,26px)] leading-[0.95]">
                                                         {m.home_team?.name}
                                                     </span>
@@ -315,9 +317,10 @@ export default function HomeClient({
 
                                                 {/* Đội khách */}
                                                 <div className="flex flex-col items-center gap-2 text-center">
-                                                    <span className="text-[clamp(54px,9vw,96px)] leading-none">
-                                                        {m.away_team?.flag}
-                                                    </span>
+                                                    <FlagImg
+                                                        emoji={m.away_team?.flag ?? ''}
+                                                        className="h-[clamp(54px,9vw,96px)] w-auto object-contain"
+                                                    />
                                                     <span className="font-display uppercase text-fg text-[clamp(15px,2.2vw,26px)] leading-[0.95]">
                                                         {m.away_team?.name}
                                                     </span>
@@ -483,8 +486,9 @@ export default function HomeClient({
                             <Link
                                 href={`/teams/${t.id}`}
                                 title={t.name}
-                                className="font-display uppercase tracking-tight text-fg text-[30px] leading-none transition hover:text-accent">
-                                {t.flag} {t.name}
+                                className="font-display uppercase tracking-tight text-fg text-[30px] leading-none transition hover:text-accent inline-flex items-center gap-2">
+                                <FlagImg emoji={t.flag} className="h-7 w-auto object-contain" />
+                                {t.name}
                             </Link>
                             <span
                                 className="text-accent text-[18px]"
