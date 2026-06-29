@@ -35,7 +35,7 @@ function BracketCard({
   const card = (
     <Link
       href={`/matches/${match.id}`}
-      className={`glass glass-hover relative block w-44 shrink-0 rounded-xl p-2.5 text-xs ${
+      className={`glass glass-hover relative block w-36 shrink-0 rounded-xl p-2.5 text-xs ${
         isToday && !live ? "border-today shadow-[0_0_24px_-4px_var(--today)]" : ""
       }`}
     >
