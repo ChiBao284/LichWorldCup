@@ -1,58 +1,56 @@
 import type { Metadata } from "next";
-import { fetchLeaderboard } from "@/lib/supabase/server";
-import type { LeaderboardRow } from "@/lib/types";
-import Avatar from "@/components/Avatar";
+import { fetchTopScorers } from "@/lib/supabase/server";
+import FlagImg from "@/components/FlagImg";
 
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "Bảng xếp hạng thánh dự đoán — World Cup 2026",
+  title: "Vua phá lưới — World Cup 2026",
 };
 
 export default async function LeaderboardPage() {
-  const rows: LeaderboardRow[] = await fetchLeaderboard();
+  const scorers = await fetchTopScorers();
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-10">
       <h1 className="mb-2 text-4xl font-black sm:text-5xl">
-        🔮 Thánh <span className="text-gradient">dự đoán</span>
+        Vua <span className="text-gradient">phá lưới</span> ⚽
       </h1>
       <p className="mb-10 text-muted2">
-        Xếp hạng theo tỉ lệ pick trúng đội thắng (chỉ tính trận đã kết thúc, hòa
-        không tính trúng).
+        Xếp hạng cầu thủ ghi nhiều bàn thắng nhất (không tính phản lưới).
       </p>
 
-      {rows.length === 0 ? (
+      {scorers.length === 0 ? (
         <div className="glass rounded-3xl p-12 text-center text-muted2">
-          Chưa có ai trên bảng — pick vài trận để trở thành thánh dự đoán đầu tiên! 🥇
+          Chưa có bàn thắng nào được ghi nhận.
         </div>
       ) : (
         <ol className="space-y-2">
-          {rows.map((row, i) => {
+          {scorers.map((s, i) => {
             const medal = i === 0 ? "🥇" : i === 1 ? "🥈" : i === 2 ? "🥉" : null;
             return (
               <li
-                key={row.user_id}
+                key={`${s.name}|${s.team_name}`}
                 className={`glass flex items-center gap-4 rounded-2xl px-4 py-3 ${
                   i === 0 ? "border-gold/40 shadow-[0_0_30px_-10px_rgba(255,209,102,0.4)]" : ""
                 }`}
               >
-                <span className="w-8 text-center text-lg font-black text-muted2">
+                <span className="w-8 shrink-0 text-center text-lg font-black text-muted2">
                   {medal ?? i + 1}
                 </span>
-                <span className="flex h-11 w-11 items-center justify-center overflow-hidden rounded-full border border-hairline bg-card text-2xl">
-                  <Avatar value={row.avatar} />
-                </span>
+                <FlagImg
+                  emoji={s.team_flag}
+                  className="h-8 w-auto shrink-0 object-contain"
+                />
                 <div className="min-w-0 flex-1">
-                  <p className="truncate font-bold">{row.username}</p>
-                  <p className="text-xs text-muted2">
-                    Trúng {row.correct_picks}/{row.total_picks} trận
-                  </p>
+                  <p className="truncate font-bold">{s.name}</p>
+                  <p className="truncate text-xs text-muted2">{s.team_name}</p>
                 </div>
-                <div className="text-right">
-                  <p className="text-gradient text-2xl font-black tabular-nums">
-                    {row.win_rate ?? 0}%
-                  </p>
+                <div className="shrink-0 text-right">
+                  <span className="text-gradient text-2xl font-black tabular-nums">
+                    {s.goals}
+                  </span>
+                  <span className="ml-1 text-xs text-muted3">bàn</span>
                 </div>
               </li>
             );

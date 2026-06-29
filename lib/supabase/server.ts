@@ -93,3 +93,31 @@ export async function fetchLeaderboard() {
     return [];
   }
 }
+
+export async function fetchTopScorers() {
+  const matches = await fetchMatches();
+  const map = new Map<string, { name: string; team_name: string; team_flag: string; goals: number }>();
+
+  for (const match of matches) {
+    if (match.status !== "finished") continue;
+
+    const aggregate = (
+      goals: typeof match.home_goals,
+      team: typeof match.home_team
+    ) => {
+      if (!goals || !team) return;
+      for (const g of goals) {
+        if (g.owngoal) continue;
+        const key = `${g.name}|${team.id}`;
+        const entry = map.get(key);
+        if (entry) entry.goals++;
+        else map.set(key, { name: g.name, team_name: team.name, team_flag: team.flag, goals: 1 });
+      }
+    };
+
+    aggregate(match.home_goals, match.home_team);
+    aggregate(match.away_goals, match.away_team);
+  }
+
+  return [...map.values()].sort((a, b) => b.goals - a.goals);
+}
