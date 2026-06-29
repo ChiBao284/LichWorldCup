@@ -26,7 +26,7 @@ export default function FlagImg({
   style?: React.CSSProperties;
 }) {
   const code = flagEmojiToISO(emoji);
-  if (!code) return <span className={className} style={style}>{emoji}</span>;
+  if (!code) return <span className={`inline-block shrink-0 rounded-sm bg-white/10 ${className}`} style={style} />;
   return (
     // eslint-disable-next-line @next/next/no-img-element
     <img

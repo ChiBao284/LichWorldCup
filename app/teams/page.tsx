@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { fetchTeams } from "@/lib/supabase/server";
 import type { Team } from "@/lib/types";
+import FlagImg from "@/components/FlagImg";
 
 export const dynamic = "force-dynamic";
 
@@ -44,7 +45,7 @@ export default async function TeamsPage() {
                       href={`/teams/${t.id}`}
                       className="flex items-center gap-3 rounded-xl px-3 py-2 transition hover:bg-soft"
                     >
-                      <span className="text-2xl">{t.flag}</span>
+                      <FlagImg emoji={t.flag ?? ""} className="h-7 w-auto object-contain shrink-0" />
                       <span className="flex-1 font-semibold">{t.name}</span>
                       {t.fifa_rank && (
                         <span className="text-xs text-muted3">#{t.fifa_rank} FIFA</span>

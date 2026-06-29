@@ -46,7 +46,7 @@ function BracketCard({
       )}
       <Row
         flag={match.home_team?.flag}
-        name={match.home_team?.name ?? match.home_placeholder ?? "—"}
+        name={match.home_team?.name ?? "Chưa xác định"}
         score={homeScore}
         winner={homeWin}
         isLive={live}
@@ -54,7 +54,7 @@ function BracketCard({
       <div className="my-1.5 h-px bg-soft2" />
       <Row
         flag={match.away_team?.flag}
-        name={match.away_team?.name ?? match.away_placeholder ?? "—"}
+        name={match.away_team?.name ?? "Chưa xác định"}
         score={awayScore}
         winner={awayWin}
         isLive={live}

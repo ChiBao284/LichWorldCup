@@ -13,6 +13,7 @@ import WatchLiveButton from '@/components/WatchLiveButton';
 import { STAGE_LABELS } from '@/lib/types';
 import { formatFullDate } from '@/lib/format';
 import type { GoalEvent, Match } from '@/lib/types';
+import FlagImg from '@/components/FlagImg';
 
 export default function MatchDetailClient({
     match: initial,
@@ -243,9 +244,7 @@ function TeamBlock({
 }) {
     const content = (
         <div className="flex flex-1 flex-col items-center gap-3">
-            <span className="text-6xl drop-shadow-xl sm:text-8xl">
-                {flag ?? '🏳️'}
-            </span>
+            <FlagImg emoji={flag ?? ""} className="h-16 w-auto object-contain drop-shadow-xl sm:h-24 shrink-0" />
             <span className="text-center text-base font-extrabold sm:text-xl">
                 {name}
             </span>
