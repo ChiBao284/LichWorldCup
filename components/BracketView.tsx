@@ -5,27 +5,38 @@ import { motion } from "motion/react";
 import type { Match } from "@/lib/types";
 import { formatTime, formatDate, dateKey } from "@/lib/format";
 import FlagImg from "@/components/FlagImg";
+import { useLiveScores, type LiveScore } from "@/hooks/useLiveScores";
 
 /* Chiều cao phần thân bracket — mọi cột & line đều tính % theo chiều cao này */
 const BODY = "h-[760px]";
 const LINE = "bg-line";
 
 /* Một ô trận đấu nhỏ trong nhánh */
-function BracketCard({ match, isToday }: { match: Match; isToday: boolean }) {
+function BracketCard({
+  match,
+  isToday,
+  liveScore,
+}: {
+  match: Match;
+  isToday: boolean;
+  liveScore?: LiveScore;
+}) {
   const done = match.status === "finished";
   const live = match.status === "live";
   const homeWin = done && match.home_score > match.away_score;
   const awayWin = done && match.away_score > match.home_score;
 
-  return (
+  const homeScore =
+    live && liveScore != null ? liveScore.home : match.status !== "scheduled" ? match.home_score : null;
+  const awayScore =
+    live && liveScore != null ? liveScore.away : match.status !== "scheduled" ? match.away_score : null;
+  const clock = liveScore?.detail ?? (match.minute ? `${match.minute}'` : "");
+
+  const card = (
     <Link
       href={`/matches/${match.id}`}
       className={`glass glass-hover relative block w-44 shrink-0 rounded-xl p-2.5 text-xs ${
-        live
-          ? "live-dot border-red-500/50"
-          : isToday
-            ? "border-today shadow-[0_0_24px_-4px_var(--today)]"
-            : ""
+        isToday && !live ? "border-today shadow-[0_0_24px_-4px_var(--today)]" : ""
       }`}
     >
       {isToday && !live && (
@@ -36,19 +47,21 @@ function BracketCard({ match, isToday }: { match: Match; isToday: boolean }) {
       <Row
         flag={match.home_team?.flag}
         name={match.home_team?.name ?? match.home_placeholder ?? "—"}
-        score={match.status !== "scheduled" ? match.home_score : null}
+        score={homeScore}
         winner={homeWin}
+        isLive={live}
       />
       <div className="my-1.5 h-px bg-soft2" />
       <Row
         flag={match.away_team?.flag}
         name={match.away_team?.name ?? match.away_placeholder ?? "—"}
-        score={match.status !== "scheduled" ? match.away_score : null}
+        score={awayScore}
         winner={awayWin}
+        isLive={live}
       />
       <p className="mt-1.5 text-center text-[10px] text-muted3">
         {live ? (
-          <span className="font-bold text-red-400">● LIVE {match.minute}&apos;</span>
+          <span className="font-bold text-red-400">● LIVE {clock}</span>
         ) : done ? (
           "Kết thúc"
         ) : (
@@ -59,6 +72,16 @@ function BracketCard({ match, isToday }: { match: Match; isToday: boolean }) {
       </p>
     </Link>
   );
+
+  if (live) {
+    return (
+      <div className="rounded-xl bg-gradient-to-br from-red-500 via-orange-400 to-red-600 p-[2px] shadow-[0_0_24px_-4px_rgba(239,68,68,0.6)]">
+        {card}
+      </div>
+    );
+  }
+
+  return card;
 }
 
 function Row({
@@ -66,11 +89,13 @@ function Row({
   name,
   score,
   winner,
+  isLive,
 }: {
   flag?: string;
   name: string;
   score: number | null;
   winner: boolean;
+  isLive?: boolean;
 }) {
   return (
     <div
@@ -80,7 +105,11 @@ function Row({
     >
       <FlagImg emoji={flag ?? "🏳️"} className="h-4 w-auto object-contain shrink-0" />
       <span className="flex-1 truncate">{name}</span>
-      {score !== null && <span className="tabular-nums font-bold">{score}</span>}
+      {score !== null && (
+        <span className={`tabular-nums font-bold${isLive && !winner ? " text-sm text-red-400" : ""}`}>
+          {score}
+        </span>
+      )}
     </div>
   );
 }
@@ -91,11 +120,13 @@ function RoundColumn({
   matches,
   todayKey,
   delay,
+  liveScores,
 }: {
   title: string;
   matches: Match[];
   todayKey: string;
   delay: number;
+  liveScores: Record<number, LiveScore>;
 }) {
   return (
     <motion.div
@@ -109,7 +140,12 @@ function RoundColumn({
       </h3>
       <div className={`flex ${BODY} flex-col justify-around`}>
         {matches.map((m) => (
-          <BracketCard key={m.id} match={m} isToday={dateKey(m.kickoff_at) === todayKey} />
+          <BracketCard
+            key={m.id}
+            match={m}
+            isToday={dateKey(m.kickoff_at) === todayKey}
+            liveScore={liveScores[m.id]}
+          />
         ))}
       </div>
     </motion.div>
@@ -165,6 +201,7 @@ function StraightConnector() {
 
 export default function BracketView({ matches }: { matches: Match[] }) {
   const todayKey = dateKey(new Date().toISOString());
+  const liveScores = useLiveScores(matches);
 
   const byStage = (stage: string) =>
     matches
@@ -190,13 +227,13 @@ export default function BracketView({ matches }: { matches: Match[] }) {
     <div className="overflow-x-auto pb-4">
       <div className="flex w-max gap-0 px-2">
         {/* ───── Cánh trái ───── */}
-        <RoundColumn title="Vòng 1/16" matches={r32.slice(0, 8)} todayKey={todayKey} delay={0} />
+        <RoundColumn title="Vòng 1/16" matches={r32.slice(0, 8)} todayKey={todayKey} delay={0} liveScores={liveScores} />
         <Connectors pairs={4} />
-        <RoundColumn title="Vòng 1/8" matches={r16.slice(0, 4)} todayKey={todayKey} delay={0.08} />
+        <RoundColumn title="Vòng 1/8" matches={r16.slice(0, 4)} todayKey={todayKey} delay={0.08} liveScores={liveScores} />
         <Connectors pairs={2} />
-        <RoundColumn title="Tứ kết" matches={qf.slice(0, 2)} todayKey={todayKey} delay={0.16} />
+        <RoundColumn title="Tứ kết" matches={qf.slice(0, 2)} todayKey={todayKey} delay={0.16} liveScores={liveScores} />
         <Connectors pairs={1} />
-        <RoundColumn title="Bán kết" matches={sf.slice(0, 1)} todayKey={todayKey} delay={0.24} />
+        <RoundColumn title="Bán kết" matches={sf.slice(0, 1)} todayKey={todayKey} delay={0.24} liveScores={liveScores} />
         <StraightConnector />
 
         {/* ───── Chung kết (giữa) ───── */}
@@ -212,7 +249,11 @@ export default function BracketView({ matches }: { matches: Match[] }) {
           <div className={`relative flex ${BODY} flex-col justify-center`}>
             {final && (
               <div className="rounded-2xl bg-gradient-to-b from-gold/30 to-transparent p-[2px] shadow-[0_0_50px_-10px_rgba(255,209,102,0.4)]">
-                <BracketCard match={final} isToday={dateKey(final.kickoff_at) === todayKey} />
+                <BracketCard
+                  match={final}
+                  isToday={dateKey(final.kickoff_at) === todayKey}
+                  liveScore={liveScores[final.id]}
+                />
               </div>
             )}
             {third && (
@@ -220,7 +261,11 @@ export default function BracketView({ matches }: { matches: Match[] }) {
                 <p className="mb-2 text-center text-[10px] font-bold uppercase text-muted3">
                   Tranh hạng 3
                 </p>
-                <BracketCard match={third} isToday={dateKey(third.kickoff_at) === todayKey} />
+                <BracketCard
+                  match={third}
+                  isToday={dateKey(third.kickoff_at) === todayKey}
+                  liveScore={liveScores[third.id]}
+                />
               </div>
             )}
           </div>
@@ -228,13 +273,13 @@ export default function BracketView({ matches }: { matches: Match[] }) {
 
         {/* ───── Cánh phải ───── */}
         <StraightConnector />
-        <RoundColumn title="Bán kết" matches={sf.slice(1, 2)} todayKey={todayKey} delay={0.24} />
+        <RoundColumn title="Bán kết" matches={sf.slice(1, 2)} todayKey={todayKey} delay={0.24} liveScores={liveScores} />
         <Connectors pairs={1} mirror />
-        <RoundColumn title="Tứ kết" matches={qf.slice(2, 4)} todayKey={todayKey} delay={0.16} />
+        <RoundColumn title="Tứ kết" matches={qf.slice(2, 4)} todayKey={todayKey} delay={0.16} liveScores={liveScores} />
         <Connectors pairs={2} mirror />
-        <RoundColumn title="Vòng 1/8" matches={r16.slice(4, 8)} todayKey={todayKey} delay={0.08} />
+        <RoundColumn title="Vòng 1/8" matches={r16.slice(4, 8)} todayKey={todayKey} delay={0.08} liveScores={liveScores} />
         <Connectors pairs={4} mirror />
-        <RoundColumn title="Vòng 1/16" matches={r32.slice(8, 16)} todayKey={todayKey} delay={0} />
+        <RoundColumn title="Vòng 1/16" matches={r32.slice(8, 16)} todayKey={todayKey} delay={0} liveScores={liveScores} />
       </div>
     </div>
   );
