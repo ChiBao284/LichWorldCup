@@ -133,7 +133,7 @@ async function sync() {
     })
     .filter((r): r is MatchRow & { _ko: number } => r !== null);
 
-  // round_slot: theo thứ tự thời gian trong mỗi vòng knockout
+  // round_slot: theo thứ tự thời gian trong mỗi vòng knockout (fallback)
   const byStage = new Map<string, { ext: string; ko: number }[]>();
   for (const r of mapped) {
     const arr = byStage.get(r.stage) ?? [];
@@ -146,9 +146,22 @@ async function sync() {
     arr.forEach((x, i) => slotByExt.set(x.ext, stage === "group" ? null : i + 1));
   }
 
+  // Đọc round_slot đã được set thủ công cho các trận knockout
+  // để sync không ghi đè vị trí bracket đã tuỳ chỉnh.
+  const { data: pinnedSlots } = await admin
+    .from("matches")
+    .select("ext_id, round_slot")
+    .not("ext_id", "is", null)
+    .not("round_slot", "is", null)
+    .in("stage", ["r32", "r16", "qf", "sf", "third", "final"]);
+  const pinnedByExt = new Map<string, number>(
+    (pinnedSlots ?? []).map((r) => [r.ext_id as string, r.round_slot as number])
+  );
+
   const rows: MatchRow[] = mapped.map(({ _ko, ...rest }) => {
     void _ko;
-    return { ...rest, round_slot: slotByExt.get(rest.ext_id) ?? null };
+    const slot = pinnedByExt.get(rest.ext_id) ?? slotByExt.get(rest.ext_id) ?? null;
+    return { ...rest, round_slot: slot };
   });
 
   const { error } = await admin.from("matches").upsert(rows, { onConflict: "ext_id" });
