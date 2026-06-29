@@ -225,7 +225,7 @@ export default function BracketView({ matches }: { matches: Match[] }) {
 
   return (
     <div className="overflow-x-auto pb-4">
-      <div className="flex w-max gap-0 px-2">
+      <div className="mx-auto flex w-max gap-0 px-2">
         {/* ───── Cánh trái ───── */}
         <RoundColumn title="Vòng 1/16" matches={r32.slice(0, 8)} todayKey={todayKey} delay={0} liveScores={liveScores} />
         <Connectors pairs={4} />
