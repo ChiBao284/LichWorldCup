@@ -52,10 +52,20 @@ export default function ScheduleClient({ matches: initial }: { matches: Match[] 
 
   const filtered = useMemo(() => {
     let list = matches;
-    if (tab === "live") list = list.filter((m) => m.status === "live");
+    // Trận status="live" mà ESPN đã báo kết thúc (vd: luân lưu, nguồn
+    // worldcup.json chưa kịp cập nhật) thì coi như đã xong, không còn "live".
+    const isReallyLive = (m: Match) =>
+      m.status === "live" && !liveScores[m.id]?.completed;
+    if (tab === "live") list = list.filter(isReallyLive);
     if (tab === "upcoming") list = list.filter((m) => m.status === "scheduled");
     if (tab === "finished")
-      list = [...list.filter((m) => m.status === "finished")].reverse();
+      list = [
+        ...list.filter(
+          (m) =>
+            m.status === "finished" ||
+            (m.status === "live" && liveScores[m.id]?.completed)
+        ),
+      ].reverse();
     if (group) list = list.filter((m) => m.group_name === group);
     if (search.trim()) {
       const q = search.trim().toLowerCase();

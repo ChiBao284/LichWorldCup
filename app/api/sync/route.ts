@@ -16,8 +16,6 @@ export const dynamic = "force-dynamic";
 const WC_URL =
   "https://raw.githubusercontent.com/upbound-web/worldcup-live.json/master/2026/worldcup.json";
 
-const LIVE_WINDOW_MIN = 120; // cửa sổ coi là "đang đá" sau giờ bóng lăn
-
 type ApiMatch = {
   round: string;
   date: string;
@@ -105,7 +103,10 @@ async function sync() {
         status = "finished";
         home_score = ft[0];
         away_score = ft[1];
-      } else if (now >= ko && now < ko + LIVE_WINDOW_MIN * 60_000) {
+      } else if (now >= ko) {
+        // Đã qua giờ bóng lăn nhưng nguồn chưa có tỉ số cuối (vd: đá hiệp phụ/luân
+        // lưu, hoặc nguồn cập nhật chậm) — vẫn giữ "live" để ESPN tiếp tục cập nhật
+        // tỉ số, tránh rơi về lại "scheduled" và làm mất tỉ số đang có.
         status = "live";
         minute = Math.min(120, Math.max(1, Math.floor((now - ko) / 60_000)));
       }

@@ -32,6 +32,12 @@ export type LiveScore = {
   /** Đồng hồ trận đấu từ ESPN, vd "67'", "HT", "FT". */
   detail: string;
   state: "pre" | "in" | "post";
+  /** Trận đã kết thúc theo ESPN — kể cả khi nguồn worldcup.json của app chưa có tỉ số cuối. */
+  completed: boolean;
+  /** Đội thắng theo ESPN (tính cả luân lưu) — null nếu chưa có/khác (hòa, chưa đá). */
+  winner: "home" | "away" | null;
+  /** Tỉ số luân lưu nếu trận đấu phải đá penalty. */
+  shootout: { home: number; away: number } | null;
   /** Diễn biến: bàn thắng, thẻ vàng, thẻ đỏ (đã sắp xếp theo thời gian). */
   events: MatchEvent[];
 };
@@ -102,6 +108,16 @@ function findEvent(events: any[], match: Match) {
       status.type?.shortDetail ?? status.displayClock ?? ""
     ).trim();
     const state = (status.type?.state ?? "in") as LiveScore["state"];
+    const completed = !!status.type?.completed;
+    const winner: LiveScore["winner"] = homeComp.winner
+      ? "home"
+      : awayComp.winner
+        ? "away"
+        : null;
+    const shootout =
+      homeComp.shootoutScore != null && awayComp.shootoutScore != null
+        ? { home: Number(homeComp.shootoutScore), away: Number(awayComp.shootoutScore) }
+        : null;
 
     // Diễn biến: chỉ lấy bàn thắng + thẻ vàng/đỏ
     const sideByTeamId: Record<string, "home" | "away"> = {};
@@ -130,7 +146,7 @@ function findEvent(events: any[], match: Match) {
     }
     events.sort((x, y) => x.order - y.order);
 
-    return { home, away, detail, state, events } satisfies LiveScore;
+    return { home, away, detail, state, completed, winner, shootout, events } satisfies LiveScore;
   }
   return null;
 }

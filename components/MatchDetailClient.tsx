@@ -12,6 +12,7 @@ import DrinkSection from '@/components/DrinkSection';
 import WatchLiveButton from '@/components/WatchLiveButton';
 import { STAGE_LABELS } from '@/lib/types';
 import { formatFullDate } from '@/lib/format';
+import { effectiveMatchStatus } from '@/lib/matchStatus';
 import type { GoalEvent, Match } from '@/lib/types';
 import FlagImg from '@/components/FlagImg';
 
@@ -50,9 +51,10 @@ export default function MatchDetailClient({
 
     const home = match.home_team;
     const away = match.away_team;
-    const showScore = match.status !== 'scheduled';
-    const homeScore = ls ? ls.home : match.home_score;
-    const awayScore = ls ? ls.away : match.away_score;
+    const eff = effectiveMatchStatus(match, ls);
+    const showScore = eff.status !== 'scheduled';
+    const homeScore = eff.home;
+    const awayScore = eff.away;
 
     return (
         <div className="mx-auto max-w-4xl space-y-6 px-4 py-10">
@@ -67,9 +69,9 @@ export default function MatchDetailClient({
                 initial={{ opacity: 0, y: 24 }}
                 animate={{ opacity: 1, y: 0 }}
                 className={`glass relative overflow-hidden rounded-3xl p-8 sm:p-10 ${
-                    match.status === 'live' ? 'border-red-500/30' : ''
+                    eff.status === 'live' ? 'border-red-500/30' : ''
                 }`}>
-                {match.status === 'live' && (
+                {eff.status === 'live' && (
                     <div className="absolute inset-0 bg-gradient-to-br from-red-500/10 via-transparent to-hot/10" />
                 )}
                 <div className="relative">
@@ -80,7 +82,7 @@ export default function MatchDetailClient({
                                 ? ` · Bảng ${match.group_name}`
                                 : ''}
                         </span>
-                        <StatusBadge match={match} detail={ls?.detail} />
+                        <StatusBadge match={match} liveScore={ls} />
                     </div>
 
                     <div className="flex items-center justify-between gap-4">
@@ -105,13 +107,20 @@ export default function MatchDetailClient({
                                         damping: 14,
                                     }}
                                     className={`text-5xl font-black tabular-nums sm:text-7xl ${
-                                        match.status === 'live'
+                                        eff.status === 'live'
                                             ? 'text-gradient-hot'
                                             : 'text-gradient'
                                     }`}>
                                     {homeScore}-{awayScore}
                                 </motion.div>
-                            ) : (
+                            ) : null}
+                            {eff.shootout && (
+                                <p className="mt-1 text-xs font-bold uppercase tracking-wider text-muted2">
+                                    Luân lưu {eff.shootout.home}-
+                                    {eff.shootout.away}
+                                </p>
+                            )}
+                            {!showScore && (
                                 <div className="text-3xl font-black text-muted sm:text-5xl">
                                     VS
                                 </div>
@@ -159,7 +168,7 @@ export default function MatchDetailClient({
             </motion.div>
 
             {/* Xem trực tiếp — chỉ hiện khi trận đang đá */}
-            {match.status === 'live' && (
+            {eff.status === 'live' && (
                 <motion.div
                     initial={{ opacity: 0, y: 24 }}
                     animate={{ opacity: 1, y: 0 }}

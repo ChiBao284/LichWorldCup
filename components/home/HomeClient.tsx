@@ -23,6 +23,7 @@ import DrinkDealCard from '@/components/DrinkDealCard';
 import Avatar from '@/components/Avatar';
 import FlagImg from '@/components/FlagImg';
 import { formatTime } from '@/lib/format';
+import { effectiveMatchStatus } from '@/lib/matchStatus';
 import type { GoalEvent, LeaderboardRow, Match, Team } from '@/lib/types';
 
 /** Dựng diễn biến (bàn thắng) cho trận đã kết thúc từ home_goals/away_goals đã lưu. */
@@ -148,8 +149,15 @@ export default function HomeClient({
     const FINISHED_GRACE_MS = 30 * 60_000;
     const featured = matches
         .filter((m) => {
-            if (m.status === 'live') return true;
             const ko = Date.parse(m.kickoff_at);
+            if (m.status === 'live') {
+                // ESPN đã báo kết thúc (kể cả luân lưu) dù nguồn worldcup.json
+                // chưa kịp cập nhật — áp cùng grace window như trận "finished".
+                if (liveScores[m.id]?.completed) {
+                    return now < ko + LIVE_WINDOW_MS + FINISHED_GRACE_MS;
+                }
+                return true;
+            }
             if (m.status === 'scheduled' && m.home_team_id) {
                 return ko > now && ko - now <= SOON_MS;
             }
@@ -179,13 +187,22 @@ export default function HomeClient({
         )
         .slice(0, 6);
     // Trận còn ở "tâm điểm" (vừa kết thúc) thì khỏi lặp lại ở mục "đã đấu".
+    // Bao gồm cả trận status="live" mà ESPN đã báo kết thúc (vd: kết thúc bằng
+    // luân lưu nhưng nguồn worldcup.json chưa kịp cập nhật tỉ số cuối).
     const finished = matches
-        .filter((m) => m.status === 'finished' && !featuredIds.has(m.id))
+        .filter(
+            (m) =>
+                (m.status === 'finished' ||
+                    (m.status === 'live' && liveScores[m.id]?.completed)) &&
+                !featuredIds.has(m.id),
+        )
         .slice(-6)
         .reverse();
 
-    // Có trận đang đá → đưa cả section "Trận cầu tâm điểm" lên trên Hero.
-    const hasLive = featured.some((m) => m.status === 'live');
+    // Có trận đang đá thực sự (ESPN chưa báo kết thúc) → đưa "Trận cầu tâm điểm" lên trên Hero.
+    const hasLive = featured.some(
+        (m) => m.status === 'live' && !liveScores[m.id]?.completed,
+    );
 
     /* Parallax hero */
     const heroRef = useRef<HTMLDivElement>(null);
@@ -226,14 +243,16 @@ export default function HomeClient({
                 <div className="mt-8 space-y-10">
                     {featured.map((m, i) => {
                         const ls = liveScores[m.id];
-                        const hs = ls ? ls.home : m.home_score;
-                        const as = ls ? ls.away : m.away_score;
-                        const isLive = m.status === 'live';
+                        const eff = effectiveMatchStatus(m, ls);
+                        const hs = eff.home;
+                        const as = eff.away;
+                        const isLive = eff.status === 'live';
                         // live + finished đều hiện tỉ số + badge; chỉ scheduled mới đếm ngược.
-                        const showScore = m.status !== 'scheduled';
-                        // Diễn biến trận đã kết thúc lấy từ goals đã lưu (DB).
+                        const showScore = eff.status !== 'scheduled';
+                        // Diễn biến trận đã kết thúc lấy từ goals đã lưu (DB) — chỉ khi
+                        // chưa có diễn biến chi tiết hơn từ ESPN.
                         const finishedEvents =
-                            m.status === 'finished' ? goalsToEvents(m) : [];
+                            eff.status === 'finished' ? goalsToEvents(m) : [];
                         const minsToKickoff = Math.max(
                             0,
                             Math.round(
@@ -275,9 +294,7 @@ export default function HomeClient({
                                                         <>
                                                             <StatusBadge
                                                                 match={m}
-                                                                detail={
-                                                                    ls?.detail
-                                                                }
+                                                                liveScore={ls}
                                                             />
                                                             <motion.div
                                                                 key={`${hs}-${as}`}
@@ -538,7 +555,10 @@ export default function HomeClient({
                         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                             {finished.map((m, i) => (
                                 <Reveal key={m.id} delay={i * 0.07}>
-                                    <MatchCard match={m} />
+                                    <MatchCard
+                                        match={m}
+                                        liveScore={liveScores[m.id]}
+                                    />
                                 </Reveal>
                             ))}
                         </div>

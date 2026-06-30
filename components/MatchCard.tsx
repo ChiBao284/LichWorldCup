@@ -4,6 +4,7 @@ import type { LiveScore } from "@/hooks/useLiveScores";
 import { STAGE_LABELS } from "@/lib/types";
 import { formatTime, formatDate } from "@/lib/format";
 import FlagImg from "@/components/FlagImg";
+import { effectiveMatchStatus } from "@/lib/matchStatus";
 
 function TeamSide({
   name,
@@ -30,25 +31,25 @@ function TeamSide({
 
 export function StatusBadge({
   match,
-  detail,
+  liveScore,
 }: {
   match: Match;
-  /** Đồng hồ trực tiếp (vd "67'", "HT") — ưu tiên hơn match.minute nếu có. */
-  detail?: string;
+  /** Tỉ số trực tiếp từ ESPN — dùng để biết trận đã thực sự kết thúc chưa (kể cả luân lưu). */
+  liveScore?: LiveScore;
 }) {
-  if (match.status === "live") {
-    const clock = detail ?? (match.minute ? `${match.minute}'` : "");
+  const eff = effectiveMatchStatus(match, liveScore);
+  if (eff.status === "live") {
     return (
       <span className="inline-flex items-center gap-1.5 rounded-full bg-accent/10 px-2.5 py-0.5 font-mono text-[11px] font-bold uppercase tracking-wider text-accent">
         <span className="live-dot h-1.5 w-1.5 rounded-full bg-accent" />
-        LIVE {clock}
+        LIVE {eff.clock}
       </span>
     );
   }
-  if (match.status === "finished") {
+  if (eff.status === "finished") {
     return (
       <span className="rounded-full border border-hairline px-2.5 py-0.5 font-mono text-[11px] uppercase tracking-wider text-muted2">
-        Kết thúc
+        {eff.shootout ? `Luân lưu ${eff.shootout.home}-${eff.shootout.away}` : "Kết thúc"}
       </span>
     );
   }
@@ -70,15 +71,14 @@ export default function MatchCard({
 }) {
   const home = match.home_team;
   const away = match.away_team;
-  const showScore = match.status !== "scheduled";
-  const homeScore = liveScore ? liveScore.home : match.home_score;
-  const awayScore = liveScore ? liveScore.away : match.away_score;
+  const eff = effectiveMatchStatus(match, liveScore);
+  const showScore = eff.status !== "scheduled";
 
   return (
     <Link
       href={`/matches/${match.id}`}
       className={`glass glass-hover block rounded-2xl p-4 ${
-        match.status === "live" ? "border-accent" : ""
+        eff.status === "live" ? "border-accent" : ""
       }`}
     >
       <div className="mb-3 flex items-center justify-between gap-2">
@@ -86,7 +86,7 @@ export default function MatchCard({
           {STAGE_LABELS[match.stage]}
           {match.group_name ? ` · Bảng ${match.group_name}` : ""}
         </span>
-        <StatusBadge match={match} detail={liveScore?.detail} />
+        <StatusBadge match={match} liveScore={liveScore} />
       </div>
 
       <div className="flex items-center gap-3">
@@ -99,10 +99,10 @@ export default function MatchCard({
           {showScore ? (
             <span
               className={`font-display text-2xl tabular-nums ${
-                match.status === "live" ? "text-accent" : "text-fg"
+                eff.status === "live" ? "text-accent" : "text-fg"
               }`}
             >
-              {homeScore} - {awayScore}
+              {eff.home} - {eff.away}
             </span>
           ) : (
             <span className="font-mono text-base text-muted tabular-nums">

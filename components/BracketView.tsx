@@ -1,11 +1,14 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { motion } from "motion/react";
 import type { Match } from "@/lib/types";
 import { formatTime, formatDate, dateKey } from "@/lib/format";
 import FlagImg from "@/components/FlagImg";
 import { useLiveScores, type LiveScore } from "@/hooks/useLiveScores";
+import { supabaseBrowser, isSupabaseConfigured } from "@/lib/supabase/client";
+import { effectiveMatchStatus } from "@/lib/matchStatus";
 
 /* Chiều cao phần thân bracket — mọi cột & line đều tính % theo chiều cao này */
 const BODY = "h-[760px]";
@@ -21,16 +24,15 @@ function BracketCard({
   isToday: boolean;
   liveScore?: LiveScore;
 }) {
-  const done = match.status === "finished";
-  const live = match.status === "live";
-  const homeWin = done && match.home_score > match.away_score;
-  const awayWin = done && match.away_score > match.home_score;
+  const eff = effectiveMatchStatus(match, liveScore);
+  const done = eff.status === "finished";
+  const live = eff.status === "live";
+  const homeWin = done && eff.winner === "home";
+  const awayWin = done && eff.winner === "away";
 
-  const homeScore =
-    live && liveScore != null ? liveScore.home : match.status !== "scheduled" ? match.home_score : null;
-  const awayScore =
-    live && liveScore != null ? liveScore.away : match.status !== "scheduled" ? match.away_score : null;
-  const clock = liveScore?.detail ?? (match.minute ? `${match.minute}'` : "");
+  const homeScore = eff.home;
+  const awayScore = eff.away;
+  const clock = eff.clock;
 
   const card = (
     <Link
@@ -63,7 +65,7 @@ function BracketCard({
         {live ? (
           <span className="font-bold text-red-400">● LIVE {clock}</span>
         ) : done ? (
-          "Kết thúc"
+          eff.shootout ? `Luân lưu ${eff.shootout.home}-${eff.shootout.away}` : "Kết thúc"
         ) : (
           <span className={isToday ? "font-bold text-today" : ""}>
             {formatDate(match.kickoff_at)} · {formatTime(match.kickoff_at)}
@@ -199,9 +201,32 @@ function StraightConnector() {
   );
 }
 
-export default function BracketView({ matches }: { matches: Match[] }) {
+export default function BracketView({ matches: initial }: { matches: Match[] }) {
+  const [matches, setMatches] = useState(initial);
   const todayKey = dateKey(new Date().toISOString());
   const liveScores = useLiveScores(matches);
+
+  /* Realtime cập nhật tỉ số / trạng thái khi trận kết thúc */
+  useEffect(() => {
+    if (!isSupabaseConfigured()) return;
+    const channel = supabaseBrowser()
+      .channel("bracket-matches")
+      .on(
+        "postgres_changes",
+        { event: "UPDATE", schema: "public", table: "matches" },
+        (payload) => {
+          setMatches((prev) =>
+            prev.map((m) =>
+              m.id === (payload.new as Match).id ? { ...m, ...(payload.new as Match) } : m
+            )
+          );
+        }
+      )
+      .subscribe();
+    return () => {
+      supabaseBrowser().removeChannel(channel);
+    };
+  }, []);
 
   const byStage = (stage: string) =>
     matches
